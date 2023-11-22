@@ -82,5 +82,4 @@ void loop() {
   }
 
   currentLEDState = (currentLEDState + 1) % 5;
-  delay(1000);
 }
