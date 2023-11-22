@@ -1,85 +1,62 @@
-int currentButtonState = LOW;
-int lastButtonState = LOW;
+#define BUTTON 2
+#define LED_BLUE 3
+#define LED_RED 4
+#define LED_GREEN 5
+#define LED_YELLOW 6
+
+#define SLEEP 1000
+#define PAUSED true
+
+bool status = !PAUSED;
+
 int currentLEDState = 0;
 
-bool isPaused = false;
-unsigned long previousTime = 0; // last time the status was updated
-const long interval = 1000; // one second of "delay"
-
 void setup() {
-  // Create serial connection
   Serial.begin(115200);
   Serial.println("Hello World!");
 
-  // Set LED pins to OUTPUT mode
-  for (int i = 2; i < 6; i++) {
-    pinMode(i, OUTPUT);
-  }
+	pinMode(LED_YELLOW, OUTPUT);
+	pinMode(LED_BLUE, OUTPUT);
+	pinMode(LED_GREEN, OUTPUT);
+	pinMode(LED_RED, OUTPUT);
 
-  // Set button pin to INPUT mode
-  pinMode(7, INPUT);
+	pinMode(BUTTON, INPUT);
+
+	attachInterrupt(digitalPinToInterrupt(BUTTON), button_handler, FALLING);
 }
 
-bool hasIntervalPassed(int inverval) {
-  unsigned long now = millis();
-  
-  if (now >= previousTime + interval) {
-    previousTime = now;
-    return true;
-  }
-
-  return false;
+void button_handler() {
+	// FIX bounce
+	status = !status;
 }
 
-bool isSystemPaused() {
-  // Read the button input pin
-  currentButtonState = digitalRead(buttonPin);
-
-  // Compare with previous state
-  if (currentButtonState != lastButtonState) {
-    if (currentButtonState == LOW) {
-      // The button went from ON to OFF
-      isPaused = !isPaused;
-    }
-    // Avoid bouncing
-    delay(50);
+void setLEDState(int state) {
+  switch (state) {
+    case 0:
+      digitalWrite(LED_RED, HIGH);
+      break;
+    case 1:
+      digitalWrite(LED_RED, LOW);
+      digitalWrite(LED_GREEN, HIGH);
+      break;
+    case 2:
+      digitalWrite(LED_GREEN, LOW);
+      digitalWrite(LED_BLUE, HIGH);
+      break;
+    case 3:
+      digitalWrite(LED_BLUE, LOW);
+      digitalWrite(LED_YELLOW, HIGH);
+      break;
+    case 4:
+      digitalWrite(LED_YELLOW, LOW);
+      break;
   }
-
-  // Update the last button state for further iterations
-  lastButtonState = currentButtonState;
-
-  return isPaused;
 }
 
 void loop() {
-  if (isSystemPaused()) {
-    return;
-  }
-
-  if (!hasIntervalPassed(interval)) {
-    return;
-  }
-
-  switch (currentLEDState) {
-    case 0:
-      digitalWrite(4, HIGH);
-      break;
-    case 1:
-      digitalWrite(4, LOW);
-      digitalWrite(5, HIGH);
-      break;
-    case 2:
-      digitalWrite(5, LOW);
-      digitalWrite(3, HIGH);
-      break;
-    case 3:
-      digitalWrite(3, LOW);
-      digitalWrite(2, HIGH);
-      break;
-    case 4:
-      digitalWrite(2, LOW);
-      break;
-  }
-
-  currentLEDState = (currentLEDState + 1) % 5;
+	if (status != PAUSED) {
+		setLEDState(currentLEDState);
+		currentLEDState = (currentLEDState + 1) % 5;
+	}
+	delay(SLEEP);
 }
