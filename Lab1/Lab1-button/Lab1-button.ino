@@ -28,7 +28,7 @@ void setup() {
   pinMode(BUTTON, INPUT);
 }
 
-bool hasIntervalPassed(int inverval) {
+bool hasIntervalPassed(int interval) {
   unsigned long now = millis();
   
   if (now >= previousTime + interval) {
