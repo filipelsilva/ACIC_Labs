@@ -15,19 +15,19 @@ void setup() {
   Serial.begin(115200);
   Serial.println("Hello World!");
 
-	pinMode(LED_YELLOW, OUTPUT);
-	pinMode(LED_BLUE, OUTPUT);
-	pinMode(LED_GREEN, OUTPUT);
-	pinMode(LED_RED, OUTPUT);
+  pinMode(LED_YELLOW, OUTPUT);
+  pinMode(LED_BLUE, OUTPUT);
+  pinMode(LED_GREEN, OUTPUT);
+  pinMode(LED_RED, OUTPUT);
 
-	pinMode(BUTTON, INPUT);
+  pinMode(BUTTON, INPUT);
 
-	attachInterrupt(digitalPinToInterrupt(BUTTON), button_handler, FALLING);
+  attachInterrupt(digitalPinToInterrupt(BUTTON), button_handler, FALLING);
 }
 
 void button_handler() {
-	// FIX bounce
-	status = !status;
+  // FIX bounce
+  status = !status;
 }
 
 void setLEDState(int state) {
@@ -54,9 +54,9 @@ void setLEDState(int state) {
 }
 
 void loop() {
-	if (status != PAUSED) {
-		setLEDState(currentLEDState);
-		currentLEDState = (currentLEDState + 1) % 5;
-	}
-	delay(SLEEP);
+  if (status != PAUSED) {
+    setLEDState(currentLEDState);
+    currentLEDState = (currentLEDState + 1) % 5;
+  }
+  delay(SLEEP);
 }
