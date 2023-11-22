@@ -12,12 +12,12 @@ void setup() {
   Serial.println("Hello World!");
 
   // Set LED pins to OUTPUT mode
-  for (int i = 2; i < 6; i++) {
+  for (int i = 3; i < 7; i++) {
     pinMode(i, OUTPUT);
   }
 
   // Set button pin to INPUT mode
-  pinMode(7, INPUT);
+  pinMode(2, INPUT);
 }
 
 bool hasIntervalPassed(int inverval) {
@@ -33,7 +33,7 @@ bool hasIntervalPassed(int inverval) {
 
 bool isSystemPaused() {
   // Read the button input pin
-  currentButtonState = digitalRead(buttonPin);
+  currentButtonState = digitalRead(2);
 
   // Compare with previous state
   if (currentButtonState != lastButtonState) {
@@ -74,10 +74,10 @@ void loop() {
       break;
     case 3:
       digitalWrite(3, LOW);
-      digitalWrite(2, HIGH);
+      digitalWrite(6, HIGH);
       break;
     case 4:
-      digitalWrite(2, LOW);
+      digitalWrite(6, LOW);
       break;
   }
 
