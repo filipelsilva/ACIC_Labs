@@ -1,10 +1,17 @@
+#define BUTTON 2
+#define LED_BLUE 3
+#define LED_RED 4
+#define LED_GREEN 5
+#define LED_YELLOW 6
+
+#define SLEEP 1000
+
 int currentButtonState = LOW;
 int lastButtonState = LOW;
 int currentLEDState = 0;
 
 bool isPaused = false;
 unsigned long previousTime = 0; // last time the status was updated
-const long interval = 1000; // one second of "delay"
 
 void setup() {
   // Create serial connection
@@ -12,12 +19,13 @@ void setup() {
   Serial.println("Hello World!");
 
   // Set LED pins to OUTPUT mode
-  for (int i = 3; i < 7; i++) {
-    pinMode(i, OUTPUT);
-  }
+  pinMode(LED_YELLOW, OUTPUT);
+  pinMode(LED_BLUE, OUTPUT);
+  pinMode(LED_GREEN, OUTPUT);
+  pinMode(LED_RED, OUTPUT);
 
   // Set button pin to INPUT mode
-  pinMode(2, INPUT);
+  pinMode(BUTTON, INPUT);
 }
 
 bool hasIntervalPassed(int inverval) {
@@ -33,7 +41,7 @@ bool hasIntervalPassed(int inverval) {
 
 bool isSystemPaused() {
   // Read the button input pin
-  currentButtonState = digitalRead(2);
+  currentButtonState = digitalRead(BUTTON);
 
   // Compare with previous state
   if (currentButtonState != lastButtonState) {
@@ -56,28 +64,28 @@ void loop() {
     return;
   }
 
-  if (!hasIntervalPassed(interval)) {
+  if (!hasIntervalPassed(SLEEP)) {
     return;
   }
 
   switch (currentLEDState) {
     case 0:
-      digitalWrite(4, HIGH);
+      digitalWrite(LED_RED, HIGH);
       break;
     case 1:
-      digitalWrite(4, LOW);
-      digitalWrite(5, HIGH);
+      digitalWrite(LED_RED, LOW);
+      digitalWrite(LED_GREEN, HIGH);
       break;
     case 2:
-      digitalWrite(5, LOW);
-      digitalWrite(3, HIGH);
+      digitalWrite(LED_GREEN, LOW);
+      digitalWrite(LED_BLUE, HIGH);
       break;
     case 3:
-      digitalWrite(3, LOW);
-      digitalWrite(6, HIGH);
+      digitalWrite(LED_BLUE, LOW);
+      digitalWrite(LED_YELLOW, HIGH);
       break;
     case 4:
-      digitalWrite(6, LOW);
+      digitalWrite(LED_YELLOW, LOW);
       break;
   }
 
