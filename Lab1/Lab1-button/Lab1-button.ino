@@ -59,16 +59,8 @@ bool isSystemPaused() {
   return isPaused;
 }
 
-void loop() {
-  if (isSystemPaused()) {
-    return;
-  }
-
-  if (!hasIntervalPassed(SLEEP)) {
-    return;
-  }
-
-  switch (currentLEDState) {
+void setLEDState(int state) {
+  switch (state) {
     case 0:
       digitalWrite(LED_RED, HIGH);
       break;
@@ -88,6 +80,11 @@ void loop() {
       digitalWrite(LED_YELLOW, LOW);
       break;
   }
+}
 
-  currentLEDState = (currentLEDState + 1) % 5;
+void loop() {
+  if (!isSystemPaused() && hasIntervalPassed(SLEEP)) {
+    setLEDState(currentLEDState);
+    currentLEDState = (currentLEDState + 1) % 5;
+  }
 }
