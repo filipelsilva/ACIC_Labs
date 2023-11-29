@@ -50,21 +50,44 @@ void setLuminosityLED(int luminosity) {
 void updateLEDs(int) {
   // Read the values
   unsigned char mambos[2];
-  mambos[1] = Wire.read();
+
   mambos[0] = Wire.read();
+  mambos[1] = Wire.read();
+  Serial.print("T: ");
+  Serial.print(mambos[0], HEX);
+  Serial.print(" ");
+  Serial.print(mambos[1], HEX);
   unsigned int temperatureRead = (unsigned int)mambos;
-  mambos[1] = Wire.read();
+
   mambos[0] = Wire.read();
+  mambos[1] = Wire.read();
+  Serial.print(" | A: ");
+  Serial.print(mambos[0], HEX);
+  Serial.print(" ");
+  Serial.print(mambos[1], HEX);
   unsigned int angleRead = (unsigned int)mambos;
-  mambos[1] = Wire.read();
+
   mambos[0] = Wire.read();
+  mambos[1] = Wire.read();
+  Serial.print(" | L: ");
+  Serial.print(mambos[0], HEX);
+  Serial.print(" ");
+  Serial.print(mambos[1], HEX);
   unsigned int luminosityRead = (unsigned int)mambos;
+
+  //Serial.print("T: ");
+  //Serial.print(temperatureRead);
+  //Serial.print(" | A: ");
+  //Serial.print(angleRead);
+  //Serial.print(" | L: ");
+  //Serial.print(luminosityRead);
 
   // Map the values to the "real" scale
   int temperature = (((temperatureRead / 1024.0) * 5.0 ) - 0.5 ) * 100;
   int angle = map(angleRead, 0, 1023, 0, 180);
   int luminosity = map(luminosityRead, 0, 1023, 0, 255);
 
+  Serial.println();
   // Update LEDs
   setTemperatureLED(temperature);
   setAngleLED(angle);

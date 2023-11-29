@@ -12,8 +12,8 @@ void setup() {
 void loop() {
   // Read the values from the sensors
   int temperatureRead = analogRead(TEMPERATURESENSORPIN);
-  int angleRead = analogRead(LIGHTSENSORPIN);
-  int luminosityRead = analogRead(POTENTIOMETERPIN);
+  int angleRead = analogRead(POTENTIOMETERPIN);
+  int luminosityRead = analogRead(LIGHTSENSORPIN);
 
   // Send them over the wire
   Wire.beginTransmission(8);
@@ -21,6 +21,14 @@ void loop() {
   Wire.write(angleRead);
   Wire.write(luminosityRead);
   Wire.endTransmission();
+
+  Serial.print("T: ");
+  Serial.print(temperatureRead);
+  Serial.print(" | A: ");
+  Serial.print(angleRead);
+  Serial.print(" | L: ");
+  Serial.print(luminosityRead);
+  Serial.println();
 
   delay(2); // for the analog to digital converter to settle
 }
