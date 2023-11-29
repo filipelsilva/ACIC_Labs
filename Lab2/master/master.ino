@@ -15,11 +15,15 @@ void loop() {
   int angleRead = analogRead(POTENTIOMETERPIN);
   int luminosityRead = analogRead(LIGHTSENSORPIN);
 
+  byte temperature = map(temperatureRead, 0, 1023, 0, 255);
+  byte angle = map(angleRead, 0, 1023, 0, 255);
+  byte luminosity = map(luminosityRead, 0, 1023, 0, 255);
+
   // Send them over the wire
   Wire.beginTransmission(8);
-  Wire.write(temperatureRead);
-  Wire.write(angleRead);
-  Wire.write(luminosityRead);
+  Wire.write(temperature);
+  Wire.write(angle);
+  Wire.write(luminosity);
   Wire.endTransmission();
 
   Serial.print("T: ");
