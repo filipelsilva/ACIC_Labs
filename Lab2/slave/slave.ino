@@ -27,7 +27,7 @@ void setup() {
   pinMode(LED_YELLOW, OUTPUT);
 }
 
-void setTemperatureLED(int temperature) {
+void setTemperatureLED(float temperature) {
   if (temperature > 24) {
     digitalWrite(LED_RED, HIGH);
   } else {
@@ -50,27 +50,45 @@ void setAngleLED(int angle) {
 }
 
 void setLuminosityLED(int luminosity) {
-  analogWrite(LED_YELLOW, 255 - luminosity);
+  analogWrite(LED_YELLOW, luminosity);
 }
 
-void updateLEDs(int) {
-  // Read the values
-  unsigned int temperatureRead = Wire.read();
+void updateLEDs(int byteCount) {
+  if (byteCount != 6) {
+    Serial.println("Not the expected number of bytes");
+    return;
+  }
+
+  // Read the values and map them
+  int temperatureRead = Wire.read() << 8;
+  temperatureRead |= Wire.read();
+  float temperature = (((temperatureRead / 1024.0) * 5.0 ) - 0.5 ) * 100;
+
   Serial.print("T: ");
+  Serial.print(temperature);
+  Serial.print(" (");
   Serial.print(temperatureRead, HEX);
+  Serial.print(")");
 
-  unsigned int angleRead = Wire.read();
+  int angleRead = Wire.read() << 8;
+  angleRead |= Wire.read();
+  int angle = map(angleRead, 0, 1023, 0, 180);
+
   Serial.print(" | A: ");
+  Serial.print(angle);
+  Serial.print(" (");
   Serial.print(angleRead, HEX);
+  Serial.print(")");
 
-  unsigned int luminosityRead = Wire.read();
+  int luminosityRead = Wire.read() << 8;
+  luminosityRead |= Wire.read();
+  int luminosity = map(luminosityRead, 0, 1023, 255, 0);
+
   Serial.print(" | L: ");
+  Serial.print(luminosity);
+  Serial.print(" (");
   Serial.print(luminosityRead, HEX);
-
-  // Map the values to the "real" scale
-  int temperature = (((temperatureRead / 256.0) * 5.0 ) - 0.5 ) * 100;
-  int angle = angleRead;
-  int luminosity = luminosityRead;
+  Serial.print(")");
 
   // Update LEDs
   setTemperatureLED(temperature);

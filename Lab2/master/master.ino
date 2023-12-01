@@ -15,23 +15,22 @@ void loop() {
   int angleRead = analogRead(POTENTIOMETERPIN);
   int luminosityRead = analogRead(LIGHTSENSORPIN);
 
-  byte temperature = map(temperatureRead, 0, 1023, 0, 255);
-  byte angle = map(angleRead, 0, 1023, 0, 255);
-  byte luminosity = map(luminosityRead, 0, 1023, 0, 255);
-
   // Send them over the wire
   Wire.beginTransmission(8);
-  Wire.write(temperature);
-  Wire.write(angle);
-  Wire.write(luminosity);
+  Wire.write(temperatureRead >> 8);
+  Wire.write(temperatureRead & 255);
+  Wire.write(angleRead >> 8);
+  Wire.write(angleRead & 255);
+  Wire.write(luminosityRead >> 8);
+  Wire.write(luminosityRead & 255);
   Wire.endTransmission();
 
   Serial.print("T: ");
-  Serial.print(temperatureRead);
+  Serial.print(temperatureRead, HEX);
   Serial.print(" | A: ");
-  Serial.print(angleRead);
+  Serial.print(angleRead, HEX);
   Serial.print(" | L: ");
-  Serial.print(luminosityRead);
+  Serial.print(luminosityRead, HEX);
   Serial.println();
 
   delay(2); // for the analog to digital converter to settle
