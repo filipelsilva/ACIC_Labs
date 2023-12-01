@@ -19,7 +19,7 @@ bool hasIntervalPassed(int interval) {
 }
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   Wire.begin(8);
   Wire.onReceive(updateLEDs);
   pinMode(LED_BLUE, OUTPUT);
@@ -37,14 +37,7 @@ void setTemperatureLED(float temperature) {
 
 void setAngleLED(int angle) {
   int msecs = map(angle, 0, 180, 2000, 200);
-  Serial.print(" | msecs: ");
-  Serial.print(msecs);
-  Serial.print(" | millis: ");
-  Serial.print(millis());
-  Serial.print(" | currentAngleLEDState: ");
-  Serial.print(currentAngleLEDState);
   if (hasIntervalPassed(msecs)) {
-    Serial.print(" | changing state");
     if (currentAngleLEDState == HIGH) {
       currentAngleLEDState = LOW;
     } else {
@@ -67,39 +60,37 @@ void updateLEDs(int byteCount) {
   // Read the values and map them
   int temperatureRead = Wire.read() << 8;
   temperatureRead |= Wire.read();
-  float temperature = (((temperatureRead / 1024.0) * 5.0 ) - 0.5 ) * 100;
-
-  Serial.print("T: ");
-  Serial.print(temperature);
-  Serial.print(" (");
-  Serial.print(temperatureRead, HEX);
-  Serial.print(")");
 
   int angleRead = Wire.read() << 8;
   angleRead |= Wire.read();
-  int angle = map(angleRead, 0, 1023, 0, 180);
-
-  Serial.print(" | A: ");
-  Serial.print(angle);
-  Serial.print(" (");
-  Serial.print(angleRead, HEX);
-  Serial.print(")");
 
   int luminosityRead = Wire.read() << 8;
   luminosityRead |= Wire.read();
-  int luminosity = map(luminosityRead, 0, 1023, 255, 0);
 
-  Serial.print(" | L: ");
-  Serial.print(luminosity);
-  Serial.print(" (");
-  Serial.print(luminosityRead, HEX);
-  Serial.print(")");
+  // Serial.print("T: ");
+  // Serial.print(temperatureRead, HEX);
+  // Serial.print(" | A: ");
+  // Serial.print(angleRead, HEX);
+  // Serial.print(" | L: ");
+  // Serial.print(luminosityRead, HEX);
+  // Serial.println();
+
+  // Map the values
+  float temperature = (((temperatureRead / 1024.0) * 5.0 ) - 0.5 ) * 100;
+  int angle = map(angleRead, 0, 1023, 0, 180);
+  int luminosity = map(luminosityRead, 0, 1023, 255, 0);
 
   // Update LEDs
   setTemperatureLED(temperature);
   setAngleLED(angle);
   setLuminosityLED(luminosity);
 
+  Serial.print("T: ");
+  Serial.print(temperature);
+  Serial.print(" | A: ");
+  Serial.print(angleRead);
+  Serial.print(" | L: ");
+  Serial.print(luminosityRead);
   Serial.println();
 }
 
