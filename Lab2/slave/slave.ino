@@ -1,8 +1,8 @@
 #include <Wire.h>
 
 #define LED_BLUE 2
-#define LED_RED 3
-#define LED_YELLOW 4
+#define LED_RED 4
+#define LED_YELLOW 3
 
 unsigned long previousTime = 0;
 int currentAngleLEDState = LOW;
