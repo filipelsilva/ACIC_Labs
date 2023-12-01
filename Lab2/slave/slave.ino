@@ -36,10 +36,15 @@ void setTemperatureLED(float temperature) {
 }
 
 void setAngleLED(int angle) {
-  int msecs = map(angle, 0, 255, 6, 66);
+  int msecs = map(angle, 0, 180, 2000, 200);
   Serial.print(" | msecs: ");
   Serial.print(msecs);
+  Serial.print(" | millis: ");
+  Serial.print(millis());
+  Serial.print(" | currentAngleLEDState: ");
+  Serial.print(currentAngleLEDState);
   if (hasIntervalPassed(msecs)) {
+    Serial.print(" | changing state");
     if (currentAngleLEDState == HIGH) {
       currentAngleLEDState = LOW;
     } else {
