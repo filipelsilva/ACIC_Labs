@@ -72,5 +72,10 @@ match. The system is responsive, which shows that it is working accordingly.
 
 # Question 7
 
+The LED starts flickering very quickly. That makes sense, considering that there
+is a delay between the value read by the sensor and the corresponding LED being
+turned on or off (with a variable intensity, in this case). Due to this delay,
+the LED responds very quickly to the sensor's readings, causing the flickering.
+
 # Question 8
 
