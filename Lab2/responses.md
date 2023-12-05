@@ -68,10 +68,17 @@ match. The system is responsive, which shows that it is working accordingly.
 
 # Question 5
 
+The timing constraints on the system are related to the I2C protocol.
+Due to the usage of the Wire library in Arduino, all the low-level timing
+details regarding the I2C communication are abstracted.
+The sensor reading/actuator writing time can be neglected since this is much
+lower than the I2C protocol's timing constraints (e.g., approximately 2
+microseconds for the light sensor to react).
+
 # Question 6
 
-Latency: 1ms
 Data rate: 1000bytes/10ms * 0.5 = 50KB/s
+Latency: 1ms
 
 # Question 7
 
