@@ -42,9 +42,10 @@ using PWM).
 
 **Potentiometer:** none.
 
-**Light intensity sensor:** 10 seconds before the start of the program, time
-just to read the intensity and from there, scale according to the maximum and
-minimum seen in those 10 seconds.
+**Light intensity sensor:** 10 seconds before the start of the program, the
+programs enters a loop in which it just reads the light intensity and from
+there, the program scales according to the maximum and minimum values seen in
+those 10 seconds.
 
 ## 4.c
 
