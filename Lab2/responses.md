@@ -70,6 +70,9 @@ match. The system is responsive, which shows that it is working accordingly.
 
 # Question 6
 
+Latency: 1ms
+Data rate: 1000bytes/10ms * 0.5 = 50KB/s
+
 # Question 7
 
 The LED starts flickering very quickly. That makes sense, considering that there

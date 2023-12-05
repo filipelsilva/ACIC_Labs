@@ -4,22 +4,12 @@
 #define LIGHTSENSORPIN A1
 #define POTENTIOMETERPIN A3
 
-int angleSensorMin = 1023;
-int angleSensorMax = 0;
 int luminositySensorMin = 1023;
 int luminositySensorMax = 0;
 
 void calibrateSensors() {
   while (millis() < 10000) {
-    int angleRead = analogRead(POTENTIOMETERPIN);
     int luminosityRead = analogRead(LIGHTSENSORPIN);
-
-    if (angleRead < angleSensorMin) {
-      angleSensorMin = angleRead;
-    }
-    if (angleRead > angleSensorMax) {
-      angleSensorMax = angleRead;
-    }
     if (luminosityRead < luminositySensorMin) {
       luminositySensorMin = luminosityRead;
     }
@@ -38,13 +28,13 @@ void setup() {
 void loop() {
   // Read the values from the sensors
   int temperatureRead = analogRead(TEMPERATURESENSORPIN);
-  // int angleRead = analogRead(POTENTIOMETERPIN);
-  // int luminosityRead = analogRead(LIGHTSENSORPIN);
-  int angleRead = map(analogRead(POTENTIOMETERPIN), angleSensorMin, angleSensorMax, 0, 1023);
+  int angleRead = analogRead(POTENTIOMETERPIN);
   int luminosityRead = map(analogRead(LIGHTSENSORPIN), luminositySensorMin, luminositySensorMax, 0, 1023);
 
   // Send them over the wire
   Wire.beginTransmission(8);
+  // Variable delay
+  delay(map(angleRead, 0, 1023, 1000, 0));
   Wire.write(temperatureRead >> 8);
   Wire.write(temperatureRead & 255);
   Wire.write(angleRead >> 8);
