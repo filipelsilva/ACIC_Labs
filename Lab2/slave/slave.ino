@@ -78,7 +78,7 @@ void updateLEDs(int byteCount) {
   // Map the values
   float temperature = (((temperatureRead / 1024.0) * 5.0 ) - 0.5 ) * 100;
   int angle = map(angleRead, 0, 1023, 0, 180);
-  int luminosity = map(luminosityRead, 0, 1023, 255, 0);
+  int luminosity = map(luminosityRead, 0, 1023, 0, 255);
 
   // Update LEDs
   setTemperatureLED(temperature);
