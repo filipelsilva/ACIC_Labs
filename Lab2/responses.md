@@ -78,7 +78,15 @@ microseconds for the light sensor to react).
 # Question 6
 
 Data rate: 1000bytes/10ms * 0.5 = 50KB/s
+
+(data rate was measured by sending some bytes over I2C from the master to the
+slave and back, and dividing the number of bytes sent and received by that
+round-trip time - after dividing that time by 2)
+
 Latency: 1ms
+
+(latency was measured by sending a byte over I2C and back, and measuring the
+round-trip time and dividing by 2)
 
 # Question 7
 
