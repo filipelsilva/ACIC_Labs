@@ -31,10 +31,12 @@ void loop() {
   int angleRead = analogRead(POTENTIOMETERPIN);
   int luminosityRead = map(analogRead(LIGHTSENSORPIN), luminositySensorMin, luminositySensorMax, 0, 1023);
 
-  // Send them over the wire
   Wire.beginTransmission(8);
+
   // Variable delay
   delay(map(angleRead, 0, 1023, 1000, 0));
+
+  // Send them over the wire
   Wire.write(temperatureRead >> 8);
   Wire.write(temperatureRead & 255);
   Wire.write(angleRead >> 8);

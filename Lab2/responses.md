@@ -89,3 +89,8 @@ the LED responds very quickly to the sensor's readings, causing the flickering.
 
 # Question 8
 
+The system's responses to the sensors' readings are delayed depending on the
+potentiometer's readings. If the delay was 0 and turned to 1 second, the system
+would slow down. If the delay was 1 second and then diminished, the system would
+stop for a little while (due to the last second, in this case, of delay), and
+then resume the normal operation.
