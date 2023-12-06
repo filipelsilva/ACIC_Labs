@@ -34,7 +34,7 @@ void loop() {
   Wire.beginTransmission(8);
 
   // Variable delay
-  delay(map(angleRead, 0, 1023, 1000, 0));
+  // delay(map(angleRead, 0, 1023, 1000, 0));
 
   // Send them over the wire
   Wire.write(temperatureRead >> 8);

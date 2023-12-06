@@ -15,8 +15,8 @@ void doEcho(int byteCount) {
 }
 
 void requestEvent() {
-  char strtest[1000] = {0};
-  for (int i = 0; i < 1000; i++) {
+  char strtest[32] = {0};
+  for (int i = 0; i < 32; i++) {
     Wire.write(strtest[i]);
   }
 }

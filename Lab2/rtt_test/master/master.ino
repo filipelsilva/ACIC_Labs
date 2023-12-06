@@ -8,15 +8,15 @@ void testRTT() {
   delay(5000);
   // Send the bytes, receive the bytes, get the timestamps
   Wire.beginTransmission(8);
-  start = millis();
+  start = micros();
   Wire.write(0xFF);
 
   Wire.requestFrom(8, 1);
   int mambos = Wire.read();
-  finish = millis();
+  finish = micros();
   Serial.print("Mambos: ");
   Serial.println(mambos, HEX);
-  Serial.print("RTT (in miliseconds): ");
+  Serial.print("RTT (in microseconds): ");
   Serial.println(start);
   Serial.println(finish);
   Serial.println(finish - start);
