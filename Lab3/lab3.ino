@@ -1,11 +1,11 @@
 #include <Wire.h>
 
-#define LED_W_RED 0 // TODO
-#define LED_S_RED 0 // TODO
-#define LED_W_YELLOW 0 // TODO
-#define LED_S_YELLOW 0 // TODO
-#define LED_W_GREEN 0 // TODO
-#define LED_S_GREEN 0 // TODO
+#define LED_W_RED 3 // TODO
+#define LED_W_YELLOW 2 // TODO
+#define LED_W_GREEN 1 // TODO
+#define LED_S_RED 6 // TODO
+#define LED_S_YELLOW 5 // TODO
+#define LED_S_GREEN 4 // TODO
 
 #define BUTTON_CAR_PIN 0 // TODO
 #define BUTTON_MODE_PIN 0 // TODO
@@ -91,6 +91,8 @@ void mode0() {
 
   if ((now - previousTime) % PERIOD_MODES_MS < PERIOD_MODES_MS / 2 - LENGTH_YELLOW_MODES_MS) {
     // West junction is green, South junction is red
+    digitalWrite(LED_W_YELLOW, LOW);
+    digitalWrite(LED_S_YELLOW, LOW);
     digitalWrite(LED_W_GREEN, HIGH);
     digitalWrite(LED_S_RED, HIGH);
   } else if ((now - previousTime) % PERIOD_MODES_MS < PERIOD_MODES_MS / 2) {
@@ -112,8 +114,6 @@ void mode0() {
     digitalWrite(LED_W_YELLOW, HIGH);
     digitalWrite(LED_S_YELLOW, HIGH);
   }
-
-  previousTime = now;
 }
 
 void mode1() {
@@ -144,15 +144,20 @@ void mode1() {
     digitalWrite(LED_W_YELLOW, HIGH);
     digitalWrite(LED_S_YELLOW, HIGH);
   }
-
-  previousTime = now;
 }
 
 void setup() {
+  pinMode(LED_W_RED, OUTPUT);
+  pinMode(LED_W_YELLOW, OUTPUT);
+  pinMode(LED_W_GREEN, OUTPUT);
+  pinMode(LED_S_RED, OUTPUT);
+  pinMode(LED_S_YELLOW, OUTPUT);
+  pinMode(LED_S_GREEN, OUTPUT);
   Serial.begin(115200);
   Wire.begin();
   boot();
 }
 
 void loop() {
+  mode0();
 }
