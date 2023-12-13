@@ -2,7 +2,7 @@
 
 #define LED_W_RED 3 // TODO
 #define LED_W_YELLOW 2 // TODO
-#define LED_W_GREEN 1 // TODO
+#define LED_W_GREEN A2 // TODO
 #define LED_S_RED 6 // TODO
 #define LED_S_YELLOW 5 // TODO
 #define LED_S_GREEN 4 // TODO
@@ -19,6 +19,8 @@
 int currentMode = 0;
 
 int changeMode() {
+  Serial.print("Changing mode to ");
+  Serial.println(currentMode);
   currentMode = (currentMode + 1) % 3;
 }
 
@@ -85,8 +87,6 @@ void reset_LEDS() {
 }
 
 void mode0() {
-  Serial.println("Mode 0");
-
   unsigned long now = millis();
 
   if ((now - previousTime) % PERIOD_MODES_MS < PERIOD_MODES_MS / 2 - LENGTH_YELLOW_MODES_MS) {
@@ -117,8 +117,6 @@ void mode0() {
 }
 
 void mode1() {
-  Serial.println("Mode 1");
-
   unsigned long now = millis();
 
   if ((now - previousTime) % PERIOD_MODES_MS < dutyCycleW() - LENGTH_YELLOW_MODES_MS) {
