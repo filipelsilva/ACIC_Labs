@@ -15,12 +15,22 @@
 #define PERIOD_MODES_MS 20000
 #define LENGTH_YELLOW_MODES_MS 1000
 
-unsigned long previousTime = 0;
+// Change current mode of operation
+int currentMode = 0;
 
+int changeMode() {
+  currentMode = (currentMode + 1) % 3;
+}
+
+// Calculate duty cycle
 int carsS = 0;
 int carsW = 0;
 
 int dutyCycleW() {
+  if (carsW + carsS == 0) {
+    return PERIOD_MODES_MS / 2;
+  }
+
   float dutyCycle = ((float)carsW / (float)(carsW + carsS)) * 100;
 
   int dutyCycleRounded = round(dutyCycle);
@@ -37,6 +47,9 @@ int dutyCycleS() {
   return PERIOD_MODES_MS - dutyCycleW();
 }
 
+// Time function
+unsigned long previousTime = 0;
+
 bool hasIntervalPassed(int interval) {
   unsigned long now = millis();
   if (now >= previousTime + interval) {
@@ -46,6 +59,7 @@ bool hasIntervalPassed(int interval) {
   return false;
 }
 
+// Operating mode functions
 void toggleYellowLED(int interval) {
   if (hasIntervalPassed(interval)) {
     digitalWrite(LED_W_YELLOW, !digitalRead(LED_W_YELLOW));
