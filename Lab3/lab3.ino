@@ -125,7 +125,7 @@ void mode1() {
     // West junction is green, South junction is red
     digitalWrite(LED_W_GREEN, HIGH);
     digitalWrite(LED_S_RED, HIGH);
-  } else if ((now - previousTime) % PERIOD_MODES_MS < dytyCycleW()) {
+  } else if ((now - previousTime) % PERIOD_MODES_MS < dutyCycleW()) {
     // Changing the junctions
     digitalWrite(LED_W_GREEN, LOW);
     digitalWrite(LED_S_RED, LOW);
