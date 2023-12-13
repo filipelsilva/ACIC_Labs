@@ -92,35 +92,25 @@ void mode0() {
   if ((now - previousTime) % PERIOD_MODES_MS < PERIOD_MODES_MS / 2 - LENGTH_YELLOW_MODES_MS) {
     // West junction is green, South junction is red
     digitalWrite(LED_W_GREEN, HIGH);
-    digitalWrite(LED_W_YELLOW, LOW);
-    digitalWrite(LED_W_RED, LOW);
-    digitalWrite(LED_S_GREEN, LOW);
-    digitalWrite(LED_S_YELLOW, LOW);
     digitalWrite(LED_S_RED, HIGH);
   } else if ((now - previousTime) % PERIOD_MODES_MS < PERIOD_MODES_MS / 2) {
     // Changing the junctions
     digitalWrite(LED_W_GREEN, LOW);
-    digitalWrite(LED_W_YELLOW, HIGH);
-    digitalWrite(LED_W_RED, LOW);
-    digitalWrite(LED_S_GREEN, LOW);
-    digitalWrite(LED_S_YELLOW, HIGH);
     digitalWrite(LED_S_RED, LOW);
+    digitalWrite(LED_W_YELLOW, HIGH);
+    digitalWrite(LED_S_YELLOW, HIGH);
   } else if ((now - previousTime) % PERIOD_MODES_MS < PERIOD_MODES_MS - LENGTH_YELLOW_MODES_MS) {
     // West junction is red, South junction is green
-    digitalWrite(LED_W_GREEN, LOW);
     digitalWrite(LED_W_YELLOW, LOW);
+    digitalWrite(LED_S_YELLOW, LOW);
     digitalWrite(LED_W_RED, HIGH);
     digitalWrite(LED_S_GREEN, HIGH);
-    digitalWrite(LED_S_YELLOW, LOW);
-    digitalWrite(LED_S_RED, LOW);
   } else {
     // Changing the junctions
-    digitalWrite(LED_W_GREEN, LOW);
-    digitalWrite(LED_W_YELLOW, HIGH);
     digitalWrite(LED_W_RED, LOW);
     digitalWrite(LED_S_GREEN, LOW);
+    digitalWrite(LED_W_YELLOW, HIGH);
     digitalWrite(LED_S_YELLOW, HIGH);
-    digitalWrite(LED_S_RED, LOW);
   }
 
   previousTime = now;
@@ -134,35 +124,25 @@ void mode1() {
   if ((now - previousTime) % PERIOD_MODES_MS < dutyCycleW() - LENGTH_YELLOW_MODES_MS) {
     // West junction is green, South junction is red
     digitalWrite(LED_W_GREEN, HIGH);
-    digitalWrite(LED_W_YELLOW, LOW);
-    digitalWrite(LED_W_RED, LOW);
-    digitalWrite(LED_S_GREEN, LOW);
-    digitalWrite(LED_S_YELLOW, LOW);
     digitalWrite(LED_S_RED, HIGH);
   } else if ((now - previousTime) % PERIOD_MODES_MS < dytyCycleW()) {
     // Changing the junctions
     digitalWrite(LED_W_GREEN, LOW);
-    digitalWrite(LED_W_YELLOW, HIGH);
-    digitalWrite(LED_W_RED, LOW);
-    digitalWrite(LED_S_GREEN, LOW);
-    digitalWrite(LED_S_YELLOW, HIGH);
     digitalWrite(LED_S_RED, LOW);
+    digitalWrite(LED_W_YELLOW, HIGH);
+    digitalWrite(LED_S_YELLOW, HIGH);
   } else if ((now - previousTime) % PERIOD_MODES_MS < PERIOD_MODES_MS - LENGTH_YELLOW_MODES_MS) {
     // West junction is red, South junction is green
-    digitalWrite(LED_W_GREEN, LOW);
     digitalWrite(LED_W_YELLOW, LOW);
+    digitalWrite(LED_S_YELLOW, LOW);
     digitalWrite(LED_W_RED, HIGH);
     digitalWrite(LED_S_GREEN, HIGH);
-    digitalWrite(LED_S_YELLOW, LOW);
-    digitalWrite(LED_S_RED, LOW);
   } else {
     // Changing the junctions
-    digitalWrite(LED_W_GREEN, LOW);
-    digitalWrite(LED_W_YELLOW, HIGH);
     digitalWrite(LED_W_RED, LOW);
     digitalWrite(LED_S_GREEN, LOW);
+    digitalWrite(LED_W_YELLOW, HIGH);
     digitalWrite(LED_S_YELLOW, HIGH);
-    digitalWrite(LED_S_RED, LOW);
   }
 
   previousTime = now;
