@@ -42,7 +42,9 @@ void update_duty_cycle() {
   if (carsW + carsS == 0) {
     dutyCycleW = PERIOD_MODES_MS / 2 - LENGTH_YELLOW_MODES_MS;
     dutyCycleS = PERIOD_MODES_MS / 2 - LENGTH_YELLOW_MODES_MS;
-    return;PERIOD_MODES_MS / 2 - LENGTH_YELLOW_MODES_MS
+    return;
+  }
+
   float dutyCycle = ((float)carsW / (float)(carsW + carsS)) * 100;
 
   int dutyCycleRounded = round(dutyCycle);
