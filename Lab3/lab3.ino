@@ -1,218 +1,31 @@
 #include <Wire.h>
 
-#define LED_W_RED 4
-#define LED_W_YELLOW 5
-#define LED_W_GREEN 6
-#define LED_S_RED 7
-#define LED_S_YELLOW 8
-#define LED_S_GREEN 9
-#define LED_RED_OUT A5
+#define C1_BUTTON_S 2
+#define C1_BUTTON_W 3
+#define C1_LED_W_RED 4
+#define C1_LED_YELLOW 5
+#define C1_LED_S_RED 6
+#define C1_LED_RED_OUT A5
 
-#define BUTTON_S 2
-#define BUTTON_W 3
-#define BUTTON_BOUNCE_MS 350
+#define C2_BUTTON_S 8
+#define C2_BUTTON_W 9
+#define C2_LED_W_RED 10
+#define C2_LED_YELLOW 11
+#define C2_LED_S_RED 12
+#define C2_LED_RED_OUT A3
 
-#define LENGTH_BOOT_MS 6000
-#define PERIOD_BOOT_MS 1000
-#define PERIOD_MODES_MS 20000
-#define LENGTH_YELLOW_MODES_MS 1000
-
-// Change current mode of operation
-int currentMode = 0;
-
-int changeMode() {
-  Serial.print("Changing mode to ");
-  Serial.println(currentMode);
-  currentMode = (currentMode + 1) % 3;
-}
-
-// Calculate duty cycle
-int carsS = 0;
-int carsW = 0;
-
-int dutyCycleW = PERIOD_MODES_MS / 2 - LENGTH_YELLOW_MODES_MS;
-int dutyCycleS = PERIOD_MODES_MS / 2 - LENGTH_YELLOW_MODES_MS;
-
-// Last button presses
-int last_button_press_w = 0;
-int last_button_press_s = 0;
-
-void update_duty_cycle() {
-  Serial.println("Updating duty cycle");
-
-  if (carsW + carsS == 0) {
-    dutyCycleW = PERIOD_MODES_MS / 2 - LENGTH_YELLOW_MODES_MS;
-    dutyCycleS = PERIOD_MODES_MS / 2 - LENGTH_YELLOW_MODES_MS;
-    return;
-  }
-
-  float dutyCycle = ((float)carsW / (float)(carsW + carsS)) * 100;
-
-  int dutyCycleRounded = round(dutyCycle);
-  if (dutyCycleRounded < 25) {
-    dutyCycleRounded = 25;
-  } else if (dutyCycleRounded > 75) {
-    dutyCycleRounded = 75;
-  }
-
-  dutyCycleW = map(dutyCycleRounded, 0, 100, 0, PERIOD_MODES_MS - 2 * LENGTH_YELLOW_MODES_MS);
-  dutyCycleS = map(100 - dutyCycleRounded, 0, 100, 0, PERIOD_MODES_MS - 2 * LENGTH_YELLOW_MODES_MS);
-  carsW = 0;
-  carsS = 0;
-}
-
-// Time function
-unsigned long previousTime = 0;
-
-bool hasIntervalPassed(int interval) {
-  unsigned long now = millis();
-  if (now >= previousTime + interval) {
-    previousTime = now;
-    return true;
-  }
-  return false;
-}
-
-// Operating mode functions
-void toggleYellowLED(int interval) {
-  if (hasIntervalPassed(interval)) {
-    digitalWrite(LED_W_YELLOW, !digitalRead(LED_W_YELLOW));
-    digitalWrite(LED_S_YELLOW, !digitalRead(LED_S_YELLOW));
-  }
-}
-
-void malfunction() {
-  Serial.println("Malfunction detected");
-  toggleYellowLED(PERIOD_BOOT_MS);
-}
-
-void boot() {
-  reset_LEDS();
-  Serial.println("Booting system");
-  while (millis() < LENGTH_BOOT_MS) {
-    toggleYellowLED(PERIOD_BOOT_MS);
-  }
-  reset_LEDS();
-}
-
-bool check_red_led() {
-  if (digitalRead(LED_RED_OUT) == (digitalRead(LED_W_RED) | digitalRead(LED_S_RED))) {
-    return false;
-  }
-
-  digitalWrite(LED_W_GREEN, LOW);
-  digitalWrite(LED_S_GREEN, LOW);
-
-  while (digitalRead(LED_RED_OUT) != (digitalRead(LED_W_RED) | digitalRead(LED_S_RED))) {
-    toggleYellowLED(LENGTH_YELLOW_MODES_MS);
-  }  
-  
-  return true;
-}
-
-void reset_LEDS() {
-  digitalWrite(LED_W_GREEN, LOW);
-  digitalWrite(LED_W_YELLOW, LOW);
-  digitalWrite(LED_W_RED, LOW);
-  digitalWrite(LED_S_GREEN, LOW);
-  digitalWrite(LED_S_YELLOW, LOW);
-  digitalWrite(LED_S_RED, LOW);
-}
-
-// West junction is green, South junction is red
-void step1() {
-  do {
-    digitalWrite(LED_W_YELLOW, LOW);
-    digitalWrite(LED_S_YELLOW, LOW);
-    digitalWrite(LED_W_GREEN, HIGH);
-    digitalWrite(LED_S_RED, HIGH);
-  } while (check_red_led());
-}
-
-// Changing the junctions
-void step2() {
-  digitalWrite(LED_W_GREEN, LOW);
-  digitalWrite(LED_S_RED, LOW);
-  digitalWrite(LED_W_YELLOW, HIGH);
-  digitalWrite(LED_S_YELLOW, HIGH);
-}
-
-// West junction is red, South junction is green
-void step3() {
-  do {
-    digitalWrite(LED_W_YELLOW, LOW);
-    digitalWrite(LED_S_YELLOW, LOW);
-    digitalWrite(LED_W_RED, HIGH);
-    digitalWrite(LED_S_GREEN, HIGH);
-  } while (check_red_led());
-}
-
-// Changing the junctions
-void step4() {
-  digitalWrite(LED_W_RED, LOW);
-  digitalWrite(LED_S_GREEN, LOW);
-  digitalWrite(LED_W_YELLOW, HIGH);
-  digitalWrite(LED_S_YELLOW, HIGH);
-}
-
-// normal cycle mode
-void mode0() {
-  step1();
-  delay(PERIOD_MODES_MS / 2 - LENGTH_YELLOW_MODES_MS);
-  step2();
-  delay(LENGTH_YELLOW_MODES_MS);
-  step3();
-  delay(PERIOD_MODES_MS / 2 - LENGTH_YELLOW_MODES_MS);
-  step4();
-  delay(LENGTH_YELLOW_MODES_MS);
-}
-
-// takes into account duty cycle  
-void mode1() {
-  step1(); // S is red here
-  delay(dutyCycleS - LENGTH_YELLOW_MODES_MS); 
-  step2();
-  delay(LENGTH_YELLOW_MODES_MS);
-  step3(); // W is red here
-  delay(dutyCycleW - LENGTH_YELLOW_MODES_MS);
-  step4();
-  delay(LENGTH_YELLOW_MODES_MS);
-  update_duty_cycle();
-}
-
-void int_button_s() {
-  if (millis() - last_button_press_s > BUTTON_BOUNCE_MS) {
-    Serial.println("Button S pressed");
-    carsS += 1;
-    last_button_press_s = millis();
-  }
-}
-
-void int_button_w() {
-  if (millis() - last_button_press_w > BUTTON_BOUNCE_MS) {
-    Serial.println("Button W pressed");
-    carsW += 1;
-    last_button_press_w = millis();
-  }
-}
+Cruzamento *c1 = nullptr;
+Cruzamento *c2 = nullptr;
 
 void setup() {
-  pinMode(LED_W_RED, OUTPUT);
-  pinMode(LED_W_YELLOW, OUTPUT);
-  pinMode(LED_W_GREEN, OUTPUT);
-  pinMode(LED_S_RED, OUTPUT);
-  pinMode(LED_S_YELLOW, OUTPUT);
-  pinMode(LED_S_GREEN, OUTPUT);
-  pinMode(LED_RED_OUT, INPUT);
-  pinMode(BUTTON_S, INPUT);
-  pinMode(BUTTON_W, INPUT);
-  attachInterrupt(digitalPinToInterrupt(BUTTON_S), int_button_s, FALLING);
-  attachInterrupt(digitalPinToInterrupt(BUTTON_W), int_button_w, FALLING);
   Serial.begin(115200);
   Wire.begin();
-  boot();
+  
+  c1 = new Cruzamento(0, C1_LED_W_RED, C1_LED_YELLOW, C1_LED_S_RED, C1_LED_RED_OUT, C1_BUTTON_S, C1_BUTTON_W);
+  c2 = new Cruzamento(1, C2_LED_W_RED, C2_LED_YELLOW, C2_LED_S_RED, C2_LED_RED_OUT, C2_BUTTON_S, C2_BUTTON_W);
 }
 
 void loop() {
-  mode1();
+  c1->loop();
+  c2->loop();
 }
