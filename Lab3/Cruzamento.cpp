@@ -49,12 +49,12 @@ void Cruzamento::update_duty_cycle() {
 }
 
 
-bool Cruzamento::hasIntervalPassed(int interval, int clock) {
-  if (clock < 0 || clock >= 10) {
+bool Cruzamento::hasIntervalPassed(int interval, unsigned int clock) {
+  if (clock >= NUM_CLOCKS) {
     return false;
   }
 
-  unsigned int now = millis();
+  unsigned long now = millis();
 
   if (now >= previousTime[clock] + interval) {
     previousTime[clock] = now;
@@ -136,25 +136,25 @@ void Cruzamento::mode0() {
   switch(step) {
     case 0:
       step1();
-      if (hasIntervalPassed(PERIOD_MODES_MS / 2 - LENGTH_YELLOW_MODES_MS, 0)) {
+      if (hasIntervalPassed(PERIOD_MODES_MS / 2 - LENGTH_YELLOW_MODES_MS, 2)) {
         step = 1;
       }
       break;
     case 1:
       step2();
-      if (hasIntervalPassed(LENGTH_YELLOW_MODES_MS, 0)) {
+      if (hasIntervalPassed(LENGTH_YELLOW_MODES_MS, 2)) {
         step = 2;
       }
       break;
     case 2:
       step3();
-      if (hasIntervalPassed(PERIOD_MODES_MS / 2 - LENGTH_YELLOW_MODES_MS, 0)) {
+      if (hasIntervalPassed(PERIOD_MODES_MS / 2 - LENGTH_YELLOW_MODES_MS, 2)) {
         step = 3;
       }
       break;
     case 3:
       step4();
-      if (hasIntervalPassed(LENGTH_YELLOW_MODES_MS, 0)) {
+      if (hasIntervalPassed(LENGTH_YELLOW_MODES_MS, 2)) {
         step = 0;
       }
       break;

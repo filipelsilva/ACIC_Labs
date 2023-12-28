@@ -7,6 +7,8 @@
 #define PERIOD_MODES_MS 20000
 #define LENGTH_YELLOW_MODES_MS 1000
 
+#define NUM_CLOCKS 10
+
 class Cruzamento {
   public:
     // constructor takes the pins
@@ -24,7 +26,7 @@ class Cruzamento {
     unsigned long previousTime[10];
 
     void update_duty_cycle();
-    bool hasIntervalPassed(int interval, int clock);
+    bool hasIntervalPassed(int interval, unsigned int clock);
     void toggleYellowLED(int interval);
 
     void malfunction();
