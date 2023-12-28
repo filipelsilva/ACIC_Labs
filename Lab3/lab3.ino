@@ -1,11 +1,12 @@
 #include <Wire.h>
 
-#define LED_W_RED 4 // TODO
-#define LED_W_YELLOW 5 // TODO
-#define LED_W_GREEN 6 // TODO
-#define LED_S_RED 7 // TODO
-#define LED_S_YELLOW 8 // TODO
-#define LED_S_GREEN 9 // TODO
+#define LED_W_RED 4
+#define LED_W_YELLOW 5
+#define LED_W_GREEN 6
+#define LED_S_RED 7
+#define LED_S_YELLOW 8
+#define LED_S_GREEN 9
+#define LED_RED_OUT A5
 
 #define BUTTON_S 2
 #define BUTTON_W 3
@@ -94,6 +95,21 @@ void boot() {
   reset_LEDS();
 }
 
+bool check_red_led() {
+  if (digitalRead(LED_RED_OUT) == (digitalRead(LED_W_RED) | digitalRead(LED_S_RED))) {
+    return false;
+  }
+
+  digitalWrite(LED_W_GREEN, LOW);
+  digitalWrite(LED_S_GREEN, LOW);
+
+  while (digitalRead(LED_RED_OUT) != (digitalRead(LED_W_RED) | digitalRead(LED_S_RED))) {
+    toggleYellowLED(LENGTH_YELLOW_MODES_MS);
+  }  
+  
+  return true;
+}
+
 void reset_LEDS() {
   digitalWrite(LED_W_GREEN, LOW);
   digitalWrite(LED_W_YELLOW, LOW);
@@ -105,10 +121,12 @@ void reset_LEDS() {
 
 // West junction is green, South junction is red
 void step1() {
-  digitalWrite(LED_W_YELLOW, LOW);
-  digitalWrite(LED_S_YELLOW, LOW);
-  digitalWrite(LED_W_GREEN, HIGH);
-  digitalWrite(LED_S_RED, HIGH);
+  do {
+    digitalWrite(LED_W_YELLOW, LOW);
+    digitalWrite(LED_S_YELLOW, LOW);
+    digitalWrite(LED_W_GREEN, HIGH);
+    digitalWrite(LED_S_RED, HIGH);
+  } while (check_red_led());
 }
 
 // Changing the junctions
@@ -121,10 +139,12 @@ void step2() {
 
 // West junction is red, South junction is green
 void step3() {
-  digitalWrite(LED_W_YELLOW, LOW);
-  digitalWrite(LED_S_YELLOW, LOW);
-  digitalWrite(LED_W_RED, HIGH);
-  digitalWrite(LED_S_GREEN, HIGH);
+  do {
+    digitalWrite(LED_W_YELLOW, LOW);
+    digitalWrite(LED_S_YELLOW, LOW);
+    digitalWrite(LED_W_RED, HIGH);
+    digitalWrite(LED_S_GREEN, HIGH);
+  } while (check_red_led());
 }
 
 // Changing the junctions
@@ -183,6 +203,7 @@ void setup() {
   pinMode(LED_S_RED, OUTPUT);
   pinMode(LED_S_YELLOW, OUTPUT);
   pinMode(LED_S_GREEN, OUTPUT);
+  pinMode(LED_RED_OUT, INPUT);
   pinMode(BUTTON_S, INPUT);
   pinMode(BUTTON_W, INPUT);
   attachInterrupt(digitalPinToInterrupt(BUTTON_S), int_button_s, FALLING);
