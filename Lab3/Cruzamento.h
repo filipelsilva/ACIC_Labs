@@ -7,6 +7,8 @@
 #define PERIOD_MODES_MS 20000
 #define LENGTH_YELLOW_MODES_MS 1000
 
+#define SANE_LOG_TIME 2000
+
 #define NUM_CLOCKS 10
 
 class Cruzamento {
@@ -23,6 +25,7 @@ class Cruzamento {
     int currentMode = -1;
     int step = 0;
     int id;
+    bool malf = false;
     unsigned long previousTime[10];
     
     void log(String msg);

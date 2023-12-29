@@ -79,13 +79,16 @@ void Cruzamento::toggleYellowLED(int interval) {
   }
 }
 
-bool Cruzamento::check_red_led() {
-  // TODO
-  return false;
+bool Cruzamento::check_red_led() { 
+  return digitalRead(led_red_out_s) != digitalRead(led_s_red) || digitalRead(led_red_out_w) != digitalRead(led_w_red);
 }
 
 void Cruzamento::malfunction() {
-  log("Malfunction detected");
+  if (hasIntervalPassed(SANE_LOG_TIME, 5)) {
+    char buffer[100];
+    snprintf(buffer, sizeof(buffer), "Malfunction detected | s: %d - w: %d | s: %d - w: %d", digitalRead(led_s_red), digitalRead(led_w_red), digitalRead(led_red_out_s), digitalRead(led_red_out_w));
+    log(String(buffer));
+  }
   toggleYellowLED(PERIOD_BOOT_MS);
 }
 
@@ -224,8 +227,18 @@ void Cruzamento::loop() {
   check_button_press();
   
   if (check_red_led()) {
+    malf = true;
     malfunction();
     return;
+  }
+  
+  if (malf) {
+    malf = false;
+    reset_leds();
+    step = 0;
+    if (currentMode != 0) {
+      update_duty_cycle();
+    }
   }
   
   switch (currentMode) {

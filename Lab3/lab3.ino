@@ -1,15 +1,15 @@
 #include <Wire.h>
 
-#define C1_LED_RED_OUT_S 0
-#define C1_LED_RED_OUT_W 1
+#define C1_LED_RED_OUT_S A4
+#define C1_LED_RED_OUT_W A5
 #define C1_BUTTON_S 2
 #define C1_BUTTON_W 3
 #define C1_LED_W_RED 4
 #define C1_LED_YELLOW 5
 #define C1_LED_S_RED 6
 
-#define C2_LED_RED_OUT_S 7
-#define C2_LED_RED_OUT_W 8
+#define C2_LED_RED_OUT_S 8
+#define C2_LED_RED_OUT_W 7
 #define C2_BUTTON_S 9
 #define C2_BUTTON_W 10
 #define C2_LED_W_RED 11
