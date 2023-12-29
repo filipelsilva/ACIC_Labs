@@ -1,7 +1,15 @@
 #include "Cruzamento.h"
 
-Cruzamento::Cruzamento(int p_id, int p_lwr, int p_ly, int p_lsr, int p_lros, int p_lrow, int p_bs, int p_bw): 
-    id(p_id), led_w_red(p_lwr), led_yellow(p_ly), led_s_red(p_lsr), led_red_out_s(p_lros), led_red_out_w(p_lrow), button_s(p_bs), button_w(p_bw) {
+Cruzamento::Cruzamento(int p_id, int p_lwr, int p_ly, int p_lsr, int p_lros,
+                       int p_lrow, int p_bs, int p_bw)
+    : id(p_id),
+      led_w_red(p_lwr),
+      led_yellow(p_ly),
+      led_s_red(p_lsr),
+      led_red_out_s(p_lros),
+      led_red_out_w(p_lrow),
+      button_s(p_bs),
+      button_w(p_bw) {
   pinMode(led_w_red, OUTPUT);
   pinMode(led_yellow, OUTPUT);
   pinMode(led_s_red, OUTPUT);
@@ -18,11 +26,11 @@ Cruzamento::Cruzamento(int p_id, int p_lwr, int p_ly, int p_lsr, int p_lros, int
 
   last_button_press_w = 0;
   last_button_press_s = 0;
-  
+
   for (int i = 0; i < 10; i++) {
     previousTime[i] = millis();
   }
-  
+
   reset_leds();
 }
 
@@ -51,12 +59,13 @@ void Cruzamento::update_duty_cycle() {
     dutyCycleRounded = 75;
   }
 
-  dutyCycleW = map(dutyCycleRounded, 0, 100, 0, PERIOD_MODES_MS - 2 * LENGTH_YELLOW_MODES_MS);
-  dutyCycleS = map(100 - dutyCycleRounded, 0, 100, 0, PERIOD_MODES_MS - 2 * LENGTH_YELLOW_MODES_MS);
+  dutyCycleW = map(dutyCycleRounded, 0, 100, 0,
+                   PERIOD_MODES_MS - 2 * LENGTH_YELLOW_MODES_MS);
+  dutyCycleS = map(100 - dutyCycleRounded, 0, 100, 0,
+                   PERIOD_MODES_MS - 2 * LENGTH_YELLOW_MODES_MS);
   carsW = 0;
   carsS = 0;
 }
-
 
 bool Cruzamento::hasIntervalPassed(int interval, unsigned int clock) {
   if (clock >= NUM_CLOCKS) {
@@ -79,14 +88,18 @@ void Cruzamento::toggleYellowLED(int interval) {
   }
 }
 
-bool Cruzamento::check_red_led() { 
-  return digitalRead(led_red_out_s) != digitalRead(led_s_red) || digitalRead(led_red_out_w) != digitalRead(led_w_red);
+bool Cruzamento::check_red_led() {
+  return digitalRead(led_red_out_s) != digitalRead(led_s_red) ||
+         digitalRead(led_red_out_w) != digitalRead(led_w_red);
 }
 
 void Cruzamento::malfunction() {
   if (hasIntervalPassed(SANE_LOG_TIME, 5)) {
     char buffer[100];
-    snprintf(buffer, sizeof(buffer), "Malfunction detected | s: %d - w: %d | s: %d - w: %d", digitalRead(led_s_red), digitalRead(led_w_red), digitalRead(led_red_out_s), digitalRead(led_red_out_w));
+    snprintf(buffer, sizeof(buffer),
+             "Malfunction detected | s: %d - w: %d | s: %d - w: %d",
+             digitalRead(led_s_red), digitalRead(led_w_red),
+             digitalRead(led_red_out_s), digitalRead(led_red_out_w));
     log(String(buffer));
   }
   toggleYellowLED(PERIOD_BOOT_MS);
@@ -114,9 +127,7 @@ void Cruzamento::int_button_w() {
   }
 }
 
-int Cruzamento::read_mode() {
-  return 1;
-}
+int Cruzamento::read_mode() { return 1; }
 
 void Cruzamento::check_button_press() {
   if (digitalRead(button_s) == HIGH) {
@@ -159,7 +170,7 @@ bool Cruzamento::boot() {
 
 // normal cycle mode
 void Cruzamento::mode0() {
-  switch(step) {
+  switch (step) {
     case 0:
       step0();
       if (hasIntervalPassed(PERIOD_MODES_MS / 2 - LENGTH_YELLOW_MODES_MS, 2)) {
@@ -187,10 +198,9 @@ void Cruzamento::mode0() {
   }
 }
 
-
-// takes into account duty cycle  
+// takes into account duty cycle
 void Cruzamento::mode1() {
-  switch(step) {
+  switch (step) {
     case 0:
       step0();
       if (hasIntervalPassed(dutyCycleS, 2)) {
@@ -219,19 +229,17 @@ void Cruzamento::mode1() {
   }
 }
 
-void Cruzamento::mode2() {
-
-}
+void Cruzamento::mode2() {}
 
 void Cruzamento::loop() {
   check_button_press();
-  
+
   if (check_red_led()) {
     malf = true;
     malfunction();
     return;
   }
-  
+
   if (malf) {
     malf = false;
     reset_leds();
@@ -240,7 +248,7 @@ void Cruzamento::loop() {
       update_duty_cycle();
     }
   }
-  
+
   switch (currentMode) {
     case -1:
       if (boot()) {
