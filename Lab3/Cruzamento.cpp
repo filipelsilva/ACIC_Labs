@@ -42,29 +42,31 @@ void Cruzamento::log(String msg) {
 }
 
 void Cruzamento::update_duty_cycle() {
-  log("Updating duty cycle");
+  if (hasIntervalPassed(PERIOD_MODES_MS - 100, 6)) {
+    log("Updating duty cycle");
 
-  if (carsW + carsS == 0) {
-    dutyCycleW = PERIOD_MODES_MS / 2 - LENGTH_YELLOW_MODES_MS;
-    dutyCycleS = PERIOD_MODES_MS / 2 - LENGTH_YELLOW_MODES_MS;
-    return;
+    if (carsW + carsS == 0) {
+      dutyCycleW = PERIOD_MODES_MS / 2 - LENGTH_YELLOW_MODES_MS;
+      dutyCycleS = PERIOD_MODES_MS / 2 - LENGTH_YELLOW_MODES_MS;
+      return;
+    }
+
+    float dutyCycle = ((float)carsW / (float)(carsW + carsS)) * 100;
+
+    int dutyCycleRounded = round(dutyCycle);
+    if (dutyCycleRounded < 25) {
+      dutyCycleRounded = 25;
+    } else if (dutyCycleRounded > 75) {
+      dutyCycleRounded = 75;
+    }
+
+    dutyCycleW = map(dutyCycleRounded, 0, 100, 0,
+                     PERIOD_MODES_MS - 2 * LENGTH_YELLOW_MODES_MS);
+    dutyCycleS = map(100 - dutyCycleRounded, 0, 100, 0,
+                     PERIOD_MODES_MS - 2 * LENGTH_YELLOW_MODES_MS);
+    carsW = 0;
+    carsS = 0;
   }
-
-  float dutyCycle = ((float)carsW / (float)(carsW + carsS)) * 100;
-
-  int dutyCycleRounded = round(dutyCycle);
-  if (dutyCycleRounded < 25) {
-    dutyCycleRounded = 25;
-  } else if (dutyCycleRounded > 75) {
-    dutyCycleRounded = 75;
-  }
-
-  dutyCycleW = map(dutyCycleRounded, 0, 100, 0,
-                   PERIOD_MODES_MS - 2 * LENGTH_YELLOW_MODES_MS);
-  dutyCycleS = map(100 - dutyCycleRounded, 0, 100, 0,
-                   PERIOD_MODES_MS - 2 * LENGTH_YELLOW_MODES_MS);
-  carsW = 0;
-  carsS = 0;
 }
 
 bool Cruzamento::hasIntervalPassed(int interval, unsigned int clock) {
@@ -240,11 +242,11 @@ void Cruzamento::loop() {
     return;
   }
 
-  if (malf) {
+  if (malf == true) {
     malf = false;
     reset_leds();
     step = 0;
-    if (currentMode != 0) {
+    if (currentMode > 0) {
       update_duty_cycle();
     }
   }
