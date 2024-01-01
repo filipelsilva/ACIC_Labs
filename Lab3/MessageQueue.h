@@ -13,7 +13,7 @@ class Message {
     Event event;
     uint32_t data;
     Message() {};
-    Message(int destination, int event, uint32_t data) : destination(destination), event((Event)event), data(data) {};
+    Message(int destination, Event event, uint32_t data) : destination(destination), event(event), data(data) {};
 };
 
 class MessageQueue {
