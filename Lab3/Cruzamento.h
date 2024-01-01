@@ -29,7 +29,7 @@ class Cruzamento {
              int p_button_w);
   void loop();
   void handleEvent(int source, Event event, uint32_t data);
-  void setup(int mode, unsigned long clock);
+  void setup(int mode, unsigned long clock, Cruzamento* other);
 
  private:
   int counter_sync = 0;
@@ -51,6 +51,8 @@ class Cruzamento {
   
   unsigned int clock_offset = 0;
   unsigned long first_clock = 0;
+  
+  Cruzamento *other_c;
   
   MessageQueue messageQueue = MessageQueue();
   void processMessage();

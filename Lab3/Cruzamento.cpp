@@ -252,21 +252,25 @@ void Cruzamento::sendMessage(int destination, Event event, uint32_t data) {
 
 void Cruzamento::processMessage() {
   Message msg = messageQueue.pop();
-
-  Wire.beginTransmission((msg.destination >> 1) + 1);
-  Wire.write(msg.destination);
-  Wire.write(id);
-  Wire.write(msg.event);
   
-  if (msg.event == Event::CAR || msg.event == Event::CLOCK) {
-    for (int i = 0; i < 4; i++) {
-      Wire.write((msg.data >> (i * 8)) & 0xFF);
-    }
+  if (msg.destination == ((id % 2) == 0 ? id + 1 : id - 1)) {
+    other_c->handleEvent(id, msg.event, msg.data);
   } else {
-    Wire.write(msg.data);
-  }
+    Wire.beginTransmission((msg.destination >> 1) + 1);
+    Wire.write(msg.destination);
+    Wire.write(id);
+    Wire.write(msg.event);
+    
+    if (msg.event == Event::CAR || msg.event == Event::CLOCK) {
+      for (int i = 0; i < 4; i++) {
+        Wire.write((msg.data >> (i * 8)) & 0xFF);
+      }
+    } else {
+      Wire.write(msg.data);
+    }
 
-  Wire.endTransmission();
+    Wire.endTransmission();
+  }
 }
 
 void Cruzamento::broadcastMessage(Event event, uint32_t data) {
@@ -291,16 +295,16 @@ void Cruzamento::handleClock(int source, uint32_t p_clock) {
   // Maybe this could be solved with requests?
   if (id == 0 && east_clock != -1) {
     new_clock = (west_clock + east_clock) / 2;
-    // sendMessage(id + 1, Event::CLOCK, new_clock);
+    sendMessage(id + 1, Event::CLOCK, new_clock);
     east_clock = -1;
   } else if (id == NUMBER_OF_INTERCEPTIONS - 1 && west_clock != -1) {
     new_clock = (west_clock + clock) / 2;
-    // sendMessage(id - 1, Event::CLOCK, new_clock);
+    sendMessage(id - 1, Event::CLOCK, new_clock);
     west_clock = -1;
   } else if (west_clock != -1 && east_clock != -1) {
     new_clock = (west_clock + east_clock + clock) / 3;
-    // sendMessage(id - 1, Event::CLOCK, new_clock);
-    // sendMessage(id + 1, Event::CLOCK, new_clock);
+    sendMessage(id - 1, Event::CLOCK, new_clock);
+    sendMessage(id + 1, Event::CLOCK, new_clock);
     west_clock = -1;
     east_clock = -1;
   } else {
@@ -309,7 +313,7 @@ void Cruzamento::handleClock(int source, uint32_t p_clock) {
 
   if (clock - new_clock < ERROR_CLOCK_MS) {
     Serial.println("Sending clock sync done");
-    // sendMessage(0, Event::SYNC, 1);
+    sendMessage(0, Event::SYNC, 1);
   }
 
   clock = new_clock;
@@ -348,7 +352,7 @@ void Cruzamento::handleSync(int source, uint32_t sync) {
     }
 
     if (counter_sync == NUMBER_OF_INTERCEPTIONS - 1) {
-      // broadcastMessage(Event::SYNC, 2);
+      broadcastMessage(Event::SYNC, 2);
     }
   }
   
@@ -385,7 +389,9 @@ void Cruzamento::handleEvent(int source, Event event, uint32_t data) {
   }
 }
 
-void Cruzamento::setup(int p_mode, unsigned long clock) {
+void Cruzamento::setup(int p_mode, unsigned long clock, Cruzamento *other) {
+  other_c = other;
+
   if (id == 0) {
     broadcastMessage(Event::MODE, p_mode);
     mode = p_mode;

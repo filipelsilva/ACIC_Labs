@@ -63,8 +63,8 @@ void setup() {
   Serial.print(clock, DEC);
   Serial.println("");
 
-  c1->setup(MODE, clock);
-  c2->setup(MODE, clock);
+  c1->setup(MODE, clock, c2);
+  c2->setup(MODE, clock, c1);
 }
 
 void log_message(int destination, int source, int event, uint32_t data) {
@@ -81,9 +81,9 @@ void log_message(int destination, int source, int event, uint32_t data) {
 }
 
 void onReceive(int bytes) {
-  Serial.print("Received message with ");
-  Serial.print(bytes, DEC);
-  Serial.println(" bytes");
+  // Serial.print("Received message with ");
+  // Serial.print(bytes, DEC);
+  // Serial.println(" bytes");
 
   int destination = Wire.read();
   int source = Wire.read();
@@ -94,16 +94,13 @@ void onReceive(int bytes) {
 
   if (event == Event::CLOCK || event == Event::CAR) {
     for (int i = 0; i < 4; i++) {
-      Serial.print("Clock/Car event - ");
       data = data | (Wire.read() << (i * 8));
-      Serial.print(data, DEC);
-      Serial.println("");
     }
   } else {
     data = Wire.read();
   }
   
-  log_message(destination, source, event, data);
+  // log_message(destination, source, event, data);
 
   if (destination == c1->id) {
     c1->handleEvent(source, event, data);
