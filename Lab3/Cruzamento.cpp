@@ -42,31 +42,29 @@ void Cruzamento::log(String msg) {
 }
 
 void Cruzamento::update_duty_cycle() {
-  if (hasIntervalPassed(PERIOD_MODES_MS - 100, 6)) {
-    log("Updating duty cycle");
+  log("Updating duty cycle");
 
-    if (carsW + carsS == 0) {
-      dutyCycleW = PERIOD_MODES_MS / 2 - LENGTH_YELLOW_MODES_MS;
-      dutyCycleS = PERIOD_MODES_MS / 2 - LENGTH_YELLOW_MODES_MS;
-      return;
-    }
-
-    float dutyCycle = ((float)carsW / (float)(carsW + carsS)) * 100;
-
-    int dutyCycleRounded = round(dutyCycle);
-    if (dutyCycleRounded < 25) {
-      dutyCycleRounded = 25;
-    } else if (dutyCycleRounded > 75) {
-      dutyCycleRounded = 75;
-    }
-
-    dutyCycleW = map(dutyCycleRounded, 0, 100, 0,
-                     PERIOD_MODES_MS - 2 * LENGTH_YELLOW_MODES_MS);
-    dutyCycleS = map(100 - dutyCycleRounded, 0, 100, 0,
-                     PERIOD_MODES_MS - 2 * LENGTH_YELLOW_MODES_MS);
-    carsW = 0;
-    carsS = 0;
+  if (carsW + carsS == 0) {
+    dutyCycleW = PERIOD_MODES_MS / 2 - LENGTH_YELLOW_MODES_MS;
+    dutyCycleS = PERIOD_MODES_MS / 2 - LENGTH_YELLOW_MODES_MS;
+    return;
   }
+
+  float dutyCycle = ((float)carsW / (float)(carsW + carsS)) * 100;
+
+  int dutyCycleRounded = round(dutyCycle);
+  if (dutyCycleRounded < 25) {
+    dutyCycleRounded = 25;
+  } else if (dutyCycleRounded > 75) {
+    dutyCycleRounded = 75;
+  }
+
+  dutyCycleW = map(dutyCycleRounded, 0, 100, 0,
+                   PERIOD_MODES_MS - 2 * LENGTH_YELLOW_MODES_MS);
+  dutyCycleS = map(100 - dutyCycleRounded, 0, 100, 0,
+                   PERIOD_MODES_MS - 2 * LENGTH_YELLOW_MODES_MS);
+  carsW = 0;
+  carsS = 0;
 }
 
 bool Cruzamento::hasIntervalPassed(int interval, unsigned int clock) {
@@ -82,6 +80,14 @@ bool Cruzamento::hasIntervalPassed(int interval, unsigned int clock) {
   }
 
   return false;
+}
+
+void Cruzamento::resetClock(unsigned int clock) {
+  if (clock >= NUM_CLOCKS) {
+    return;
+  }
+
+  previousTime[clock] = millis();
 }
 
 void Cruzamento::toggleYellowLED(int interval) {
@@ -126,10 +132,10 @@ void Cruzamento::int_button_w() {
     log("Button W pressed");
     carsW += 1;
     last_button_press_w = millis();
+    
+    broadcastMessage(Event::CAR, millis() + clock_offset);
   }
 }
-
-int Cruzamento::read_mode() { return 1; }
 
 void Cruzamento::check_button_press() {
   if (digitalRead(button_s) == HIGH) {
@@ -233,10 +239,186 @@ void Cruzamento::mode1() {
 
 void Cruzamento::mode2() {}
 
+void Cruzamento::sendMessage(int destination, Event event, uint32_t data) {
+  char buffer[100];
+  snprintf(buffer, sizeof(buffer),
+           "Sending message to %d with event %d and data %d", destination,
+           event, data);
+  log(buffer);
+  
+  Message msg = Message(destination, event, data);
+  messageQueue.push(msg);
+}
+
+void Cruzamento::processMessage() {
+  Message msg = messageQueue.pop();
+
+  Wire.beginTransmission((msg.destination >> 1) + 1);
+  Wire.write(msg.destination);
+  Wire.write(id);
+  Wire.write(msg.event);
+  
+  if (msg.event == Event::CAR || msg.event == Event::CLOCK) {
+    for (int i = 0; i < 4; i++) {
+      Wire.write((msg.data >> (i * 8)) & 0xFF);
+    }
+  } else {
+    Wire.write(msg.data);
+  }
+
+  Wire.endTransmission();
+}
+
+void Cruzamento::broadcastMessage(Event event, uint32_t data) {
+  for (int i = 0; i < NUMBER_OF_INTERCEPTIONS; i++) {
+    if (i != id) {
+      sendMessage(i, event, data);
+    }
+  }
+}
+
+void Cruzamento::handleClock(int source, uint32_t p_clock) {
+  if (source == id || !booting) {
+    return;
+  }
+
+  if (source == id - 1) {
+    west_clock = p_clock;
+  } else if (source == id + 1) {
+    east_clock = p_clock;
+  }
+
+  // Maybe this could be solved with requests?
+  if (id == 0 && east_clock != -1) {
+    new_clock = (west_clock + east_clock) / 2;
+    // sendMessage(id + 1, Event::CLOCK, new_clock);
+    east_clock = -1;
+  } else if (id == NUMBER_OF_INTERCEPTIONS - 1 && west_clock != -1) {
+    new_clock = (west_clock + clock) / 2;
+    // sendMessage(id - 1, Event::CLOCK, new_clock);
+    west_clock = -1;
+  } else if (west_clock != -1 && east_clock != -1) {
+    new_clock = (west_clock + east_clock + clock) / 3;
+    // sendMessage(id - 1, Event::CLOCK, new_clock);
+    // sendMessage(id + 1, Event::CLOCK, new_clock);
+    west_clock = -1;
+    east_clock = -1;
+  } else {
+    return;
+  }
+
+  if (clock - new_clock < ERROR_CLOCK_MS) {
+    Serial.println("Sending clock sync done");
+    // sendMessage(0, Event::SYNC, 1);
+  }
+
+  clock = new_clock;
+}
+
+void Cruzamento::handleCar(int source, uint32_t ts) {
+  if (source == id) {
+    return;
+  }
+
+  // TODO
+}
+
+void Cruzamento::handleMode(int source, uint32_t p_mode) {
+  if (source != 0) {
+    return;
+  }
+
+  if (p_mode == 0 || p_mode == 1 || p_mode == 2) {
+    mode = p_mode;
+  }
+}
+
+void Cruzamento::handleStatus(int source, uint32_t status) {
+  if (source == id) {
+    return;
+  }
+
+  // TODO
+}
+
+void Cruzamento::handleSync(int source, uint32_t sync) {
+  if (id == 0) {
+    if (sync == 1) {  // FIXME maybe check if interception already sent done
+      counter_sync += 1;
+    }
+
+    if (counter_sync == NUMBER_OF_INTERCEPTIONS - 1) {
+      // broadcastMessage(Event::SYNC, 2);
+    }
+  }
+  
+  if (sync == 2 || (id == 0 && counter_sync == NUMBER_OF_INTERCEPTIONS - 1)) {
+    Serial.println("Booting done");
+    booting = false;
+    clock_offset = clock - first_clock;
+  }
+}
+
+void Cruzamento::handleEvent(int source, Event event, uint32_t data) {
+  char buffer[100];
+  snprintf(buffer, sizeof(buffer),
+           "Handling event from %d with event %d and data %d", source, event,
+           data);
+  log(buffer);
+
+  switch (event) {
+    case CLOCK:
+      handleClock(source, data);
+      break;
+    case CAR:
+      handleCar(source, data);
+      break;
+    case MODE:
+      handleMode(source, data);
+      break;
+    case STATUS:
+      handleStatus(source, data);
+      break;
+    case SYNC:
+      handleSync(source, data);
+      break;
+  }
+}
+
+void Cruzamento::setup(int p_mode, unsigned long clock) {
+  if (id == 0) {
+    broadcastMessage(Event::MODE, p_mode);
+    mode = p_mode;
+  }
+  
+  booting = true;
+  first_clock = clock;
+  
+  if (id != NUMBER_OF_INTERCEPTIONS - 1) {
+    sendMessage(id + 1, Event::CLOCK, clock);
+  }
+  
+  if (id != 0) {
+    sendMessage(id - 1, Event::CLOCK, clock);
+  }
+}
+
 void Cruzamento::loop() {
+  while (!messageQueue.isEmpty()) {
+    processMessage();
+  }
+
   check_button_press();
+  
+  // FIXME this shouldnt be here, move inside mode
+  if (hasIntervalPassed(PERIOD_MODES_MS, 6)) {
+    broadcastMessage(Event::STATUS, malf ? 1 : 0);
+  }
 
   if (check_red_led()) {
+    if (malfunction_timer == 0) {
+      malfunction_timer = millis();
+    }
     malf = true;
     malfunction();
     return;
@@ -245,17 +427,19 @@ void Cruzamento::loop() {
   if (malf == true) {
     malf = false;
     reset_leds();
-    step = 0;
-    if (currentMode > 0) {
-      update_duty_cycle();
-    }
+    // FIXME: IDK if this is really intended
+    previousTime[2] += millis() - malfunction_timer;
+    malfunction_timer = 0;
   }
 
+  bool booting_interval_passed;
   switch (currentMode) {
     case -1:
-      if (boot()) {
+      booting_interval_passed = boot();
+      // if (!booting && booting_interval_passed) {
+      if (booting_interval_passed) {
         reset_leds();
-        currentMode = read_mode();
+        currentMode = mode;
       }
       break;
     case 0:
