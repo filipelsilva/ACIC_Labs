@@ -23,7 +23,7 @@
 #define ID_PIN2 A1
 // #define ID_PIN3 A2 // FIXME
 
-#define MODE 1
+#define MODE 0
 
 Cruzamento *c1 = nullptr;
 Cruzamento *c2 = nullptr;

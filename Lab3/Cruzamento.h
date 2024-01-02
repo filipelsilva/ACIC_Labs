@@ -4,7 +4,6 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <HardwareSerial.h>
-#include "MessageQueue.h"
 
 #define BUTTON_BOUNCE_MS 200
 
@@ -20,6 +19,8 @@
 #define NUMBER_OF_INTERCEPTIONS 4
 #define ERROR_CLOCK_MS 100
 
+enum Event { CLOCK = 0, CAR = 1, MODE = 2, STATUS = 3, SYNC = 4 };
+
 class Cruzamento {
  public:
   int id;
@@ -33,33 +34,29 @@ class Cruzamento {
 
  private:
   int counter_sync = 0;
+
   int led_w_red, led_yellow, led_s_red;
   int led_red_out_s, led_red_out_w;
   int button_s, button_w;
+
   int dutyCycleW, dutyCycleS;
   int carsS, carsW;
+
   int last_button_press_s, last_button_press_w;
+
   int currentMode = -1, mode;
   int step = 0;
+
   bool malf = false;
 
   unsigned long previousTime[10];
   unsigned long malfunction_timer;
 
-  unsigned long west_clock, east_clock, clock, new_clock = millis();
-  bool booting = true;
-  
-  unsigned int clock_offset = 0;
-  unsigned long first_clock = 0;
+  long west_clock, east_clock, clock, my_new_clock = millis(), clock_offset, first_clock = 0;
+  bool clock_syncd = false, booting;
   
   Cruzamento *other_c;
   
-  MessageQueue messageQueue = MessageQueue();
-  void processMessage();
-  
-  // unsigned long cars[16][1000];
-  // unsigned int cars_idx[16];
-
   void log(String msg);
 
   void update_duty_cycle();
@@ -89,6 +86,8 @@ class Cruzamento {
   void step3();
 
   bool boot();
+  void checkClockPhase();
+
   void mode0();
   void mode1();
   void mode2();
