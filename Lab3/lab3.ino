@@ -20,7 +20,11 @@
 #define C2_LED_S_RED 6
 
 
-// FIXME
+// This would be used if we had more pins available
+// by connecting the LED_RED_OUT pins in series
+// unfortunately this is not possible since our kit
+// did not have any diodes :)
+
 // #define ID_PIN1 A0
 #define ID_PIN2 A1
 // #define ID_PIN3 A2
@@ -33,12 +37,10 @@ Cruzamento *c2 = nullptr;
 void setup() {
   Serial.begin(115200);
 
-  // FIXME
   // pinMode(ID_PIN1, INPUT);
   pinMode(ID_PIN2, INPUT);
   // pinMode(ID_PIN3, INPUT);
 
-  // FIXME
   // int id = digitalRead(ID_PIN3) << 3 + digitalRead(ID_PIN2) << 2 + digitalRead(ID_PIN1) << 1;
   int id = digitalRead(ID_PIN2) << 1;
 

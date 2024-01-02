@@ -364,13 +364,11 @@ void Cruzamento::handleStatus(int source, uint32_t status) {
   if (source == id) {
     return;
   }
-
-  // TODO
 }
 
 void Cruzamento::handleSync(int source, uint32_t sync) {
   if (id == 0) {
-    if (sync == 1) {  // FIXME maybe check if interception already sent done
+    if (sync == 1) {
       counter_sync += 1;
     }
   } else if (source == 0 && sync == 2) {
@@ -428,7 +426,6 @@ void Cruzamento::loop() {
   if (!booting) {
     check_button_press();
     
-    // FIXME this shouldnt be here, move inside mode
     if (hasIntervalPassed(PERIOD_MODES_MS, 6)) {
       broadcastMessage(Event::STATUS, malf ? 1 : 0);
     }
@@ -445,7 +442,6 @@ void Cruzamento::loop() {
     if (malf == true) {
       malf = false;
       reset_leds();
-      // FIXME: IDK if this is really intended
       previousTime[2] += millis() - malfunction_timer;
       malfunction_timer = 0;
     }
