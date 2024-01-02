@@ -31,7 +31,7 @@ class Cruzamento {
              int p_led_red_out_s, int p_led_red_out_w, int p_button_s,
              int p_button_w);
   void loop();
-  void handleEvent(int source, Event event, uint32_t data);
+  void handleEvent(int source, Event event, long data);
   void setup(int mode, unsigned long clock, Cruzamento* other);
 
  private:
@@ -44,8 +44,8 @@ class Cruzamento {
   int dutyCycleW, dutyCycleS;
   int carsS, carsW;
   
-  long car_ts_from_west;
-  long car_ts;
+  long car_ts_from_west = millis();
+  long car_ts = millis();
 
   int last_button_press_s, last_button_press_w;
   bool last_value_button_s, last_value_button_w;
@@ -78,13 +78,13 @@ class Cruzamento {
   void int_button_s();
   void int_button_w();
 
-  void sendMessage(int destination, Event event, uint32_t data);
-  void broadcastMessage(Event event, uint32_t data);
-  void handleClock(int source, uint32_t clock);
-  void handleCar(int source, uint32_t ts);
-  void handleMode(int source, uint32_t mode);
-  void handleStatus(int source, uint32_t status);
-  void handleSync(int source, uint32_t status);
+  void sendMessage(int destination, Event event, long data);
+  void broadcastMessage(Event event, long data);
+  void handleClock(int source, long clock);
+  void handleCar(int source, long ts);
+  void handleMode(int source, long mode);
+  void handleStatus(int source, long status);
+  void handleSync(int source, long status);
 
   void step0();
   void step1();

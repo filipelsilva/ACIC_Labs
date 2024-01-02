@@ -78,12 +78,14 @@ void onReceive(int bytes) {
 
   Event event = (Event)Wire.read();
 
-  uint32_t data = 0;
+  long data = 0;
 
   if (event == Event::CLOCK || event == Event::CAR) {
+    char test[4];
     for (int i = 0; i < 4; i++) {
-      data = data | (Wire.read() << (i * 8));
+      test[i] = Wire.read();
     }
+    memcpy(&data, test, 4);
   } else {
     data = Wire.read();
   }

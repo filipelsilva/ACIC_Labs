@@ -143,7 +143,11 @@ void Cruzamento::int_button_w() {
       if (car_ts - car_ts_from_west < SPEEDING_LIMIT_TIME_MS) {
         // we have a lightning mcqueen
         log("Lightning McQueen detected");
-        currentMode = 3;
+
+        if (step != 0) {
+          step = 3;
+        }
+
         previousTime[2] = millis();
       }
     }
@@ -299,10 +303,10 @@ void Cruzamento::mode1and2() {
   }
 }
 
-void Cruzamento::sendMessage(int destination, Event event, uint32_t data) {
+void Cruzamento::sendMessage(int destination, Event event, long data) {
   char buffer[100];
   snprintf(buffer, sizeof(buffer),
-           "Sending message to %d with event %d and data %d", destination,
+           "Sending message to %d with event %d and data %ld", destination,
            event, data);
   log(buffer);
   
@@ -315,9 +319,9 @@ void Cruzamento::sendMessage(int destination, Event event, uint32_t data) {
     Wire.write(event);
     
     if (event == Event::CAR || event == Event::CLOCK) {
-      for (int i = 0; i < 4; i++) {
-        Wire.write((data >> (i * 8)) & 0xFF);
-      }
+      char d[4];
+      memcpy(d, &data, 4);
+      Wire.write(d, 4);
     } else {
       Wire.write(data);
     }
@@ -326,7 +330,7 @@ void Cruzamento::sendMessage(int destination, Event event, uint32_t data) {
   }
 }
 
-void Cruzamento::broadcastMessage(Event event, uint32_t data) {
+void Cruzamento::broadcastMessage(Event event, long data) {
   for (int i = 0; i < NUMBER_OF_INTERCEPTIONS; i++) {
     if (i != id) {
       sendMessage(i, event, data);
@@ -334,7 +338,7 @@ void Cruzamento::broadcastMessage(Event event, uint32_t data) {
   }
 }
 
-void Cruzamento::handleClock(int source, uint32_t p_clock) {
+void Cruzamento::handleClock(int source, long p_clock) {
   if (source == id - 1) {
     west_clock = p_clock;
   } else if (source == id + 1) {
@@ -342,7 +346,7 @@ void Cruzamento::handleClock(int source, uint32_t p_clock) {
   }
 }
 
-void Cruzamento::handleCar(int source, uint32_t ts) {
+void Cruzamento::handleCar(int source, long ts) {
   if (source == id) {
     return;
   }
@@ -350,7 +354,7 @@ void Cruzamento::handleCar(int source, uint32_t ts) {
   car_ts_from_west = ts;
 }
 
-void Cruzamento::handleMode(int source, uint32_t p_mode) {
+void Cruzamento::handleMode(int source, long p_mode) {
   if (source != 0) {
     return;
   }
@@ -360,13 +364,13 @@ void Cruzamento::handleMode(int source, uint32_t p_mode) {
   }
 }
 
-void Cruzamento::handleStatus(int source, uint32_t status) {
+void Cruzamento::handleStatus(int source, long status) {
   if (source == id) {
     return;
   }
 }
 
-void Cruzamento::handleSync(int source, uint32_t sync) {
+void Cruzamento::handleSync(int source, long sync) {
   if (id == 0) {
     if (sync == 1) {
       counter_sync += 1;
@@ -377,10 +381,10 @@ void Cruzamento::handleSync(int source, uint32_t sync) {
   }
 }
 
-void Cruzamento::handleEvent(int source, Event event, uint32_t data) {
+void Cruzamento::handleEvent(int source, Event event, long data) {
   char buffer[100];
   snprintf(buffer, sizeof(buffer),
-           "Handling event from %d with event %d and data %d", source, event,
+           "Handling event from %d with event %d and data %ld", source, event,
            data);
   log(buffer);
 
