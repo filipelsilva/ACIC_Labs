@@ -19,12 +19,7 @@
 #define C2_LED_YELLOW 5
 #define C2_LED_S_RED 6
 
-
-// This would be used if we had more pins available
-// by connecting the LED_RED_OUT pins in series
-// unfortunately this is not possible since our kit
-// did not have any diodes :)
-
+// Due to lack of pins we only use 2 pins to set the id of the controller
 // #define ID_PIN1 A0
 #define ID_PIN2 A1
 // #define ID_PIN3 A2
@@ -72,6 +67,7 @@ void setup() {
   c2->setup(MODE, clock, c1);
 }
 
+// handles i2c messages and forwards them to the right interception
 void onReceive(int bytes) {
   int destination = Wire.read();
   int source = Wire.read();

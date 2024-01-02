@@ -17,6 +17,7 @@
 #define NUM_CLOCKS 10
 
 #define NUMBER_OF_INTERCEPTIONS 4
+#define NUMBER_OF_CARS 10
 #define ERROR_CLOCK_MS 100
 
 #define SPEEDING_LIMIT_TIME_MS 4000
@@ -43,9 +44,13 @@ class Cruzamento {
 
   int dutyCycleW, dutyCycleS;
   int carsS, carsW;
-  
-  long car_ts_from_west = millis();
-  long car_ts = millis();
+
+  long car_ts_from_west[NUMBER_OF_CARS];
+  int car_ts_from_west_index = 0;
+  long car_ts_from_south[NUMBER_OF_CARS];
+  int car_ts_from_south_index = 0;
+  long car_ts[NUMBER_OF_CARS];
+  int car_ts_index = 0;
 
   int last_button_press_s, last_button_press_w;
   bool last_value_button_s, last_value_button_w;

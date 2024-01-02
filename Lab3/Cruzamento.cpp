@@ -30,6 +30,12 @@ Cruzamento::Cruzamento(int p_id, int p_lwr, int p_ly, int p_lsr, int p_lros,
   for (int i = 0; i < 10; i++) {
     previousTime[i] = millis();
   }
+  
+  for (int i = 0; i < NUMBER_OF_CARS; i++) {
+    car_ts_from_west[i] = 0;
+    car_ts_from_south[i] = 0;
+    car_ts[i] = 0;
+  }
 
   reset_leds();
 }
@@ -41,6 +47,7 @@ void Cruzamento::log(String msg) {
   Serial.println(msg);
 }
 
+// calculates duty cycle for each street
 void Cruzamento::update_duty_cycle() {
   log("Updating duty cycle");
 
@@ -67,6 +74,11 @@ void Cruzamento::update_duty_cycle() {
   carsS = 0;
 }
 
+/*
+ * Utility function to measure time between events
+ * The clock parameter is used to support nested functions calling this function
+ * Each function must possess a unique clock parameter
+*/
 bool Cruzamento::hasIntervalPassed(int interval, unsigned int clock) {
   if (clock >= NUM_CLOCKS) {
     return false;
@@ -90,12 +102,14 @@ void Cruzamento::resetClock(unsigned int clock) {
   previousTime[clock] = millis();
 }
 
+// blinks yellow leds of both junctions at a given period
 void Cruzamento::toggleYellowLED(int interval) {
   if (hasIntervalPassed(interval, 1)) {
     digitalWrite(led_yellow, !digitalRead(led_yellow));
   }
 }
 
+// checks if the red leds are 
 bool Cruzamento::check_red_led() {
   return digitalRead(led_red_out_s) != digitalRead(led_s_red) ||
          digitalRead(led_red_out_w) != digitalRead(led_w_red);
@@ -113,20 +127,31 @@ void Cruzamento::malfunction() {
   toggleYellowLED(PERIOD_BOOT_MS);
 }
 
+// turn all leds off
 void Cruzamento::reset_leds() {
   digitalWrite(led_yellow, LOW);
   digitalWrite(led_w_red, LOW);
   digitalWrite(led_s_red, LOW);
 }
 
+// south button handler
 void Cruzamento::int_button_s() {
   if (hasIntervalPassed(BUTTON_BOUNCE_MS, 3)) {
     log("Button S pressed");
     carsS += 1;
     last_button_press_s = millis();
+    
+    // stores the timestamp of the car that just passed in the south street
+    // and communicates it to the west junction
+    car_ts_from_south[car_ts_from_south_index % NUMBER_OF_CARS] = millis() - clock_offset;
+    if (id != NUMBER_OF_INTERCEPTIONS - 1) {
+      sendMessage(id + 1, Event::CAR, car_ts_from_south[car_ts_from_south_index % NUMBER_OF_CARS]);
+    }
+    car_ts_from_south_index++;
   }
 }
 
+// west button handler
 void Cruzamento::int_button_w() {
   if (hasIntervalPassed(BUTTON_BOUNCE_MS, 4)) {
     log("Button W pressed");
@@ -134,26 +159,30 @@ void Cruzamento::int_button_w() {
     last_button_press_w = millis();
     
     if (mode == 2) {
-      car_ts = millis() - clock_offset;
+      car_ts[car_ts_index % NUMBER_OF_CARS] = millis() - clock_offset;
 
       if (id != NUMBER_OF_INTERCEPTIONS - 1) {
-        sendMessage(id + 1, Event::CAR, car_ts);
+        sendMessage(id + 1, Event::CAR, car_ts[car_ts_index % NUMBER_OF_CARS]);
       }
       
-      if (car_ts - car_ts_from_west < SPEEDING_LIMIT_TIME_MS) {
-        // we have a lightning mcqueen
+      if (car_ts[car_ts_index % NUMBER_OF_CARS] - car_ts_from_west[(car_ts_from_west_index - 1) % NUMBER_OF_CARS] < SPEEDING_LIMIT_TIME_MS 
+              && id > 0) {
+        // we have a speeder
         log("Lightning McQueen detected");
 
-        if (step != 0) {
+        if (step != 0) { // only change light if its not red already
           step = 3;
         }
 
         previousTime[2] = millis();
       }
+      
+      car_ts_index++;
     }
   }
 }
 
+// polls for button presses
 void Cruzamento::check_button_press() {
   if (digitalRead(button_s) == HIGH && digitalRead(button_s) != last_value_button_s) {
     int_button_s();
@@ -191,6 +220,7 @@ void Cruzamento::step3() {
   digitalWrite(led_yellow, HIGH);
 }
 
+// clock sync procedure
 void Cruzamento::checkClockPhase() {
   bool checked = false; 
   
@@ -202,11 +232,11 @@ void Cruzamento::checkClockPhase() {
     sendMessage(id + 1, Event::CLOCK, my_new_clock);
   }
 
-  if (id == 0 && east_clock != -1) {
+  if (id == 0 && east_clock != -1) { // has no west
     clock = my_new_clock;
     my_new_clock = (east_clock + clock) / 2;
     checked = true;
-  } else if (id == NUMBER_OF_INTERCEPTIONS - 1 && west_clock != -1) {
+  } else if (id == NUMBER_OF_INTERCEPTIONS - 1 && west_clock != -1) { // has no east
     clock = my_new_clock;
     my_new_clock = (west_clock + clock) / 2;
     checked = true;
@@ -216,6 +246,7 @@ void Cruzamento::checkClockPhase() {
     checked = true;
   }
   
+  // need to check for absolute value
   if (checked && (my_new_clock - clock < ERROR_CLOCK_MS || clock - my_new_clock < ERROR_CLOCK_MS)) {
     clock_syncd = true;
     sendMessage(0, Event::SYNC, 1);
@@ -223,21 +254,25 @@ void Cruzamento::checkClockPhase() {
   }
 }
 
+// handles the booting phase
 bool Cruzamento::boot() {
+  // sync clocks
   if (!clock_syncd) {
     checkClockPhase();
   }
 
+  // broadcast mode and sync ack
   if (id == 0 && booting) {
     broadcastMessage(Event::MODE, mode);
 
     if (counter_sync == NUMBER_OF_INTERCEPTIONS - 1) {
       log("Booting done, broadcasting mode");
-      broadcastMessage(Event::SYNC, 2); // only send broadcast once
+      broadcastMessage(Event::SYNC, 2);
       booting = false;
     }
   }
 
+  // toggle leds and waits for the boot period to finish
   toggleYellowLED(PERIOD_BOOT_MS);
   return hasIntervalPassed(LENGTH_BOOT_MS, 0) && !booting;
 }
@@ -303,6 +338,7 @@ void Cruzamento::mode1and2() {
   }
 }
 
+// handles the communication between junctions
 void Cruzamento::sendMessage(int destination, Event event, long data) {
   char buffer[100];
   snprintf(buffer, sizeof(buffer),
@@ -311,6 +347,7 @@ void Cruzamento::sendMessage(int destination, Event event, long data) {
   log(buffer);
   
   if (destination == ((id % 2) == 0 ? id + 1 : id - 1)) {
+    // messages to the same node cannot be sent through I2C
     other_c->handleEvent(id, event, data);
   } else {
     Wire.beginTransmission((destination >> 1) + 1);
@@ -319,6 +356,7 @@ void Cruzamento::sendMessage(int destination, Event event, long data) {
     Wire.write(event);
     
     if (event == Event::CAR || event == Event::CLOCK) {
+      // send timestamp in little endian
       char d[4];
       memcpy(d, &data, 4);
       Wire.write(d, 4);
@@ -330,6 +368,7 @@ void Cruzamento::sendMessage(int destination, Event event, long data) {
   }
 }
 
+// sends message to all interceptions
 void Cruzamento::broadcastMessage(Event event, long data) {
   for (int i = 0; i < NUMBER_OF_INTERCEPTIONS; i++) {
     if (i != id) {
@@ -338,6 +377,7 @@ void Cruzamento::broadcastMessage(Event event, long data) {
   }
 }
 
+// clock event handler
 void Cruzamento::handleClock(int source, long p_clock) {
   if (source == id - 1) {
     west_clock = p_clock;
@@ -346,14 +386,17 @@ void Cruzamento::handleClock(int source, long p_clock) {
   }
 }
 
+// car event handler
 void Cruzamento::handleCar(int source, long ts) {
   if (source == id) {
     return;
   }
 
-  car_ts_from_west = ts;
+  car_ts_from_west[car_ts_from_west_index] = ts;
+  car_ts_from_west_index++;
 }
 
+// mode event handler
 void Cruzamento::handleMode(int source, long p_mode) {
   if (source != 0) {
     return;
@@ -364,12 +407,14 @@ void Cruzamento::handleMode(int source, long p_mode) {
   }
 }
 
+// status event handler
 void Cruzamento::handleStatus(int source, long status) {
   if (source == id) {
     return;
   }
 }
 
+// sync event handler
 void Cruzamento::handleSync(int source, long sync) {
   if (id == 0) {
     if (sync == 1) {
@@ -381,6 +426,7 @@ void Cruzamento::handleSync(int source, long sync) {
   }
 }
 
+// forwads an event to its handler
 void Cruzamento::handleEvent(int source, Event event, long data) {
   char buffer[100];
   snprintf(buffer, sizeof(buffer),
@@ -407,6 +453,8 @@ void Cruzamento::handleEvent(int source, Event event, long data) {
   }
 }
 
+// sets up some properties of the junction that cannot be set in the constructor
+// and sends the first clock event to its neighbors
 void Cruzamento::setup(int p_mode, unsigned long clock, Cruzamento *other) {
   other_c = other;
 
@@ -426,8 +474,9 @@ void Cruzamento::setup(int p_mode, unsigned long clock, Cruzamento *other) {
   }
 }
 
+// main loop
 void Cruzamento::loop() {
-  if (!booting) {
+  if (!booting) { // handles button polling and malfunction checking
     check_button_press();
     
     if (hasIntervalPassed(PERIOD_MODES_MS, 6)) {
@@ -435,9 +484,6 @@ void Cruzamento::loop() {
     }
 
     if (check_red_led()) {
-      if (malfunction_timer == 0) {
-        malfunction_timer = millis();
-      }
       malf = true;
       malfunction();
       return;
@@ -446,15 +492,13 @@ void Cruzamento::loop() {
     if (malf == true) {
       malf = false;
       reset_leds();
-      previousTime[2] += millis() - malfunction_timer;
-      malfunction_timer = 0;
     }
   }
 
   bool booting_interval_passed;
   switch (currentMode) {
     case -1:
-      if (boot()) {
+      if (boot()) { // if boot is finished set the appropriate mode
         reset_leds();
         char buffer[100];
         snprintf(buffer, sizeof(buffer), "Mode %d", mode);
