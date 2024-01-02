@@ -19,6 +19,8 @@
 #define NUMBER_OF_INTERCEPTIONS 4
 #define ERROR_CLOCK_MS 100
 
+#define SPEEDING_LIMIT_TIME_MS 4000
+
 enum Event { CLOCK = 0, CAR = 1, MODE = 2, STATUS = 3, SYNC = 4 };
 
 class Cruzamento {
@@ -41,8 +43,12 @@ class Cruzamento {
 
   int dutyCycleW, dutyCycleS;
   int carsS, carsW;
+  
+  long car_ts_from_west;
+  long car_ts;
 
   int last_button_press_s, last_button_press_w;
+  bool last_value_button_s, last_value_button_w;
 
   int currentMode = -1, mode;
   int step = 0;
@@ -89,8 +95,7 @@ class Cruzamento {
   void checkClockPhase();
 
   void mode0();
-  void mode1();
-  void mode2();
+  void mode1and2();
 };
 
 #endif

@@ -133,18 +133,34 @@ void Cruzamento::int_button_w() {
     carsW += 1;
     last_button_press_w = millis();
     
-    broadcastMessage(Event::CAR, millis() - clock_offset);
+    if (mode == 2) {
+      car_ts = millis() - clock_offset;
+
+      if (id != NUMBER_OF_INTERCEPTIONS - 1) {
+        sendMessage(id + 1, Event::CAR, car_ts);
+      }
+      
+      if (car_ts - car_ts_from_west < SPEEDING_LIMIT_TIME_MS) {
+        // we have a lightning mcqueen
+        log("Lightning McQueen detected");
+        currentMode = 3;
+        previousTime[2] = millis();
+      }
+    }
   }
 }
 
 void Cruzamento::check_button_press() {
-  if (digitalRead(button_s) == HIGH) {
+  if (digitalRead(button_s) == HIGH && digitalRead(button_s) != last_value_button_s) {
     int_button_s();
   }
 
-  if (digitalRead(button_w) == HIGH) {
+  if (digitalRead(button_w) == HIGH && digitalRead(button_w) != last_value_button_w) {
     int_button_w();
   }
+  
+  last_value_button_s = digitalRead(button_s);
+  last_value_button_w = digitalRead(button_w);
 }
 
 // West junction is green, South junction is red
@@ -253,7 +269,7 @@ void Cruzamento::mode0() {
 }
 
 // takes into account duty cycle
-void Cruzamento::mode1() {
+void Cruzamento::mode1and2() {
   switch (step) {
     case 0:
       step0();
@@ -282,8 +298,6 @@ void Cruzamento::mode1() {
       break;
   }
 }
-
-void Cruzamento::mode2() {}
 
 void Cruzamento::sendMessage(int destination, Event event, uint32_t data) {
   char buffer[100];
@@ -333,7 +347,7 @@ void Cruzamento::handleCar(int source, uint32_t ts) {
     return;
   }
 
-  // TODO
+  car_ts_from_west = ts;
 }
 
 void Cruzamento::handleMode(int source, uint32_t p_mode) {
@@ -359,7 +373,7 @@ void Cruzamento::handleSync(int source, uint32_t sync) {
     if (sync == 1) {  // FIXME maybe check if interception already sent done
       counter_sync += 1;
     }
-  } else if (sync == 2) {
+  } else if (source == 0 && sync == 2) {
     log("Booting done");
     booting = false;
   }
@@ -411,29 +425,31 @@ void Cruzamento::setup(int p_mode, unsigned long clock, Cruzamento *other) {
 }
 
 void Cruzamento::loop() {
-  check_button_press();
-  // 
-  // // FIXME this shouldnt be here, move inside mode
-  // if (hasIntervalPassed(PERIOD_MODES_MS, 6)) {
-  //   broadcastMessage(Event::STATUS, malf ? 1 : 0);
-  // }
+  if (!booting) {
+    check_button_press();
+    
+    // FIXME this shouldnt be here, move inside mode
+    if (hasIntervalPassed(PERIOD_MODES_MS, 6)) {
+      broadcastMessage(Event::STATUS, malf ? 1 : 0);
+    }
 
-  // if (check_red_led()) {
-  //   if (malfunction_timer == 0) {
-  //     malfunction_timer = millis();
-  //   }
-  //   malf = true;
-  //   malfunction();
-  //   return;
-  // }
+    if (check_red_led()) {
+      if (malfunction_timer == 0) {
+        malfunction_timer = millis();
+      }
+      malf = true;
+      malfunction();
+      return;
+    }
 
-  // if (malf == true) {
-  //   malf = false;
-  //   reset_leds();
-  //   // FIXME: IDK if this is really intended
-  //   previousTime[2] += millis() - malfunction_timer;
-  //   malfunction_timer = 0;
-  // }
+    if (malf == true) {
+      malf = false;
+      reset_leds();
+      // FIXME: IDK if this is really intended
+      previousTime[2] += millis() - malfunction_timer;
+      malfunction_timer = 0;
+    }
+  }
 
   bool booting_interval_passed;
   switch (currentMode) {
@@ -450,10 +466,10 @@ void Cruzamento::loop() {
       mode0();
       break;
     case 1:
-      mode1();
+      mode1and2();
       break;
     case 2:
-      mode2();
+      mode1and2();
       break;
   }
 }

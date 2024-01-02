@@ -3,27 +3,29 @@
 #include <Wire.h>
 #include <HardwareSerial.h>
 
-#define C1_LED_RED_OUT_S A2
-#define C1_LED_RED_OUT_W A3
-#define C1_BUTTON_S 2
-#define C1_BUTTON_W 3
-#define C1_LED_W_RED 4
-#define C1_LED_YELLOW 5
-#define C1_LED_S_RED 6
+#define C1_LED_RED_OUT_S 8
+#define C1_LED_RED_OUT_W 7
+#define C1_BUTTON_S 9
+#define C1_BUTTON_W 10
+#define C1_LED_W_RED 11
+#define C1_LED_YELLOW 12
+#define C1_LED_S_RED 13
 
-#define C2_LED_RED_OUT_S 8
-#define C2_LED_RED_OUT_W 7
-#define C2_BUTTON_S 9
-#define C2_BUTTON_W 10
-#define C2_LED_W_RED 11
-#define C2_LED_YELLOW 12
-#define C2_LED_S_RED 13
+#define C2_LED_RED_OUT_S A2
+#define C2_LED_RED_OUT_W A3
+#define C2_BUTTON_S 2
+#define C2_BUTTON_W 3
+#define C2_LED_W_RED 4
+#define C2_LED_YELLOW 5
+#define C2_LED_S_RED 6
 
+
+// FIXME
 // #define ID_PIN1 A0
 #define ID_PIN2 A1
-// #define ID_PIN3 A2 // FIXME
+// #define ID_PIN3 A2
 
-#define MODE 0
+#define MODE 2
 
 Cruzamento *c1 = nullptr;
 Cruzamento *c2 = nullptr;
@@ -31,12 +33,13 @@ Cruzamento *c2 = nullptr;
 void setup() {
   Serial.begin(115200);
 
-  // FIXME ?
+  // FIXME
   // pinMode(ID_PIN1, INPUT);
   pinMode(ID_PIN2, INPUT);
+  // pinMode(ID_PIN3, INPUT);
 
-  // int id = digitalRead(ID_PIN2) << 2 + digitalRead(ID_PIN1) << 1;  // FIXME
-  
+  // FIXME
+  // int id = digitalRead(ID_PIN3) << 3 + digitalRead(ID_PIN2) << 2 + digitalRead(ID_PIN1) << 1;
   int id = digitalRead(ID_PIN2) << 1;
 
   Serial.print("Initializing Cruzamentos with id ");
@@ -52,7 +55,7 @@ void setup() {
                       C2_LED_RED_OUT_S, C2_LED_RED_OUT_W, C2_BUTTON_S,
                       C2_BUTTON_W);
 
-  Wire.begin((id >> 1) + 1);  // FIXME
+  Wire.begin((id >> 1) + 1);  // NOTE: this is made to avoid using channel 0
   Wire.onReceive(onReceive);
   
   unsigned long clock = millis();
@@ -67,24 +70,7 @@ void setup() {
   c2->setup(MODE, clock, c1);
 }
 
-void log_message(int destination, int source, int event, uint32_t data) {
-  Serial.print("Received message to ");
-  Serial.print(destination, DEC);
-  Serial.print(" from ");
-  Serial.print(source, DEC);
-  Serial.print(" with event ");
-  Serial.print(event, DEC);
-  Serial.print(" and data ");
-  Serial.print(data, DEC);
-  Serial.println("");
-  Serial.flush();
-}
-
 void onReceive(int bytes) {
-  // Serial.print("Received message with ");
-  // Serial.print(bytes, DEC);
-  // Serial.println(" bytes");
-
   int destination = Wire.read();
   int source = Wire.read();
 
@@ -100,8 +86,6 @@ void onReceive(int bytes) {
     data = Wire.read();
   }
   
-  // log_message(destination, source, event, data);
-
   if (destination == c1->id) {
     c1->handleEvent(source, event, data);
   } else if (destination == c2->id) {
