@@ -411,8 +411,8 @@ void Cruzamento::int_button_w() {
         sendMessage(id + 1, Event::CAR, car_ts[car_ts_index % NUMBER_OF_CARS]);
       }
       
-      if (car_ts[car_ts_index % NUMBER_OF_CARS] - car_ts_from_west[(car_ts_from_west_index - 1) % NUMBER_OF_CARS] < SPEEDING_LIMIT_TIME_MS 
-              && id > 0) {
+      if (car_ts[car_ts_index % NUMBER_OF_CARS] - car_ts_from_west[(car_ts_from_west_index - 1)
+        % NUMBER_OF_CARS] < SPEEDING_LIMIT_TIME_MS && id > 0) {
         // we have a speeder
         log("Lightning McQueen detected");
 
